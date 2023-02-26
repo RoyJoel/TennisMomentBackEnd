@@ -1,4 +1,4 @@
-module ～/TennisBackEnd
+module github.com/RoyJoel/TennisMomentBackEnd
 
 go 1.20
 
