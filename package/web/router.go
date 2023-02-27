@@ -1,9 +1,12 @@
 package web
 
 import (
-	"count_num/pkg/config"
-	"count_num/pkg/web/controller"
-	"count_num/pkg/web/interceptor"
+	"fmt"
+
+	"github.com/RoyJoel/TennisMomentBackEnd/package/config"
+	"github.com/RoyJoel/TennisMomentBackEnd/package/web/controller"
+	"github.com/RoyJoel/TennisMomentBackEnd/package/web/interceptor"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,28 +17,29 @@ func RunHttp() {
 	//解决跨域
 	r.Use(config.CorsConfig())
 	//路由组
-	num := r.Group("/num")
+	stats := r.Group("/Stats")
 	{
-		num.POST("/add/:key", controller.NewNumInfoControllerImpl().AddNumByKey)
-		num.GET("/findByKey/:key", controller.NewNumInfoControllerImpl().FindNumByKey)
-		num.GET("/findById/:id", controller.NewNumInfoControllerImpl().FindNumById)
-		num.POST("/saveInfo", controller.NewNumInfoControllerImpl().SaveNumInfo)
-		num.POST("/deleteInfo/:id", controller.NewNumInfoControllerImpl().DeleteById)
-		num.GET("/getAll", controller.NewNumInfoControllerImpl().FindAll)
-		num.POST("/update", controller.NewNumInfoControllerImpl().Update)
+		// stats.POST("/add/:key", controller.NewStatsInfoControllerImpl().AddStatsByKey)
+		// stats.GET("/findByKey/:key", controller.NewStatsInfoControllerImpl().FindStatsByKey)
+		stats.GET("/findById/:id", controller.NewStatsInfoControllerImpl().FindStatsById)
+		stats.POST("/saveInfo", controller.NewStatsInfoControllerImpl().SaveStatsInfo)
+		// stats.POST("/deleteInfo/:id", controller.NewStatsInfoControllerImpl().DeleteById)
+		stats.GET("/getAll", controller.NewStatsInfoControllerImpl().FindAll)
+		fmt.Println("fdsafsafasdff")
+		stats.POST("/update", controller.NewStatsInfoControllerImpl().Update)
 	}
 
-	roleInfo := r.Group("/role")
-	{
-		roleInfo.POST("/save", controller.NewRoleControllerImpl().CreateRole)
-		roleInfo.GET("/all", controller.NewRoleControllerImpl().GetAll)
-	}
+	// roleInfo := r.Group("/role")
+	// {
+	// 	roleInfo.POST("/save", controller.NewRoleControllerImpl().CreateRole)
+	// 	roleInfo.GET("/all", controller.NewRoleControllerImpl().GetAll)
+	// }
 
-	userInfo := r.Group("/user")
+	playerInfo := r.Group("/player")
 	{
-		userInfo.POST("/save", controller.NewUserController().CreateUser)
-		userInfo.POST("/login", controller.NewUserController().FindUserByLoginNameAndPwd)
-		userInfo.POST("/register", controller.NewUserController().Register)
+		playerInfo.POST("/save", controller.NewPlayerController().CreatePlayer)
+		playerInfo.POST("/login", controller.NewPlayerController().FindPlayerByLoginNameAndPwd)
+		playerInfo.POST("/register", controller.NewPlayerController().Register)
 	}
 
 	auth := r.Group("/auth")
@@ -43,5 +47,5 @@ func RunHttp() {
 		auth.POST("/add", controller.AddPolicy)
 	}
 
-	r.Run("127.0.0.1:" + config.PORT)
+	r.Run("0.0.0.0:" + config.PORT)
 }

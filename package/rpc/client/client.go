@@ -2,22 +2,22 @@ package main
 
 import (
 	"context"
-	"count_num/proto"
+	"github.com/RoyJoel/TennisMomentBackEnd/proto"
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
 )
 
-type NumInfoServiceClientImpl struct {
-	proto.NumInfoServiceClient
+type PlayerInfoServiceClientImpl struct {
+	proto.PlayerInfoServiceClient
 }
 
-func NewNumInfoServiceClientImpl() *NumInfoServiceClientImpl {
+func NewPlayerInfoServiceClientImpl() *PlayerInfoServiceClientImpl {
 	conn, err := grpc.Dial(":6666", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("正在监听服务端 : %v\n", err)
 	}
-	return &NumInfoServiceClientImpl{proto.NewNumInfoServiceClient(conn)}
+	return &PlayerInfoServiceClientImpl{proto.NewPlayerInfoServiceClient(conn)}
 }
 
 func main() {
@@ -28,9 +28,9 @@ func main() {
 	}
 	defer conn.Close()
 	//2 实例化 UserInfoService 服务的客户端
-	client := proto.NewNumInfoServiceClient(conn)
+	client := proto.NewPlayerInfoServiceClient(conn)
 	//3 调用grpc服务
-	req := new(proto.InfoRequest)
+	req := new(proto.PlayerInfoRequest)
 	req.Id = 20
 	resp, err := client.FindAll(context.Background(), req)
 	if err != nil {

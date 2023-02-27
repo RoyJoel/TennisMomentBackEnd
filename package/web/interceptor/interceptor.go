@@ -1,9 +1,9 @@
 package interceptor
 
 import (
-	"count_num/pkg/web/auth"
+	// "github.com/RoyJoel/TennisMomentBackEnd/package/web/auth"
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/cast"
+	// "github.com/spf13/cast"
 )
 
 var (
@@ -24,14 +24,14 @@ func HttpInterceptor() gin.HandlerFunc {
 				return
 			}
 		}
-		token := c.GetHeader("token")
-		user := auth.GetToken(c, token)
-		isPass := auth.CheckEnforce(cast.ToString(user.Role), c.Request.URL.String(), "")
-		if isPass {
-			c.Next()
-			return
-		}
-		//定义错误,终止并返回该JSON 不能使用 c.JSON(403,"no auth")
+		// token := c.GetHeader("token")
+		// player := auth.GetToken(c, token)
+		// isPass := auth.CheckEnforce(cast.ToString(player.Role), c.Request.URL.String(), "")
+		// if isPass {
+		c.Next()
+		return
+		// }
+		// 定义错误,终止并返回该JSON 不能使用 c.JSON(403,"no auth")
 		c.AbortWithStatusJSON(403, "no auth")
 	}
 }

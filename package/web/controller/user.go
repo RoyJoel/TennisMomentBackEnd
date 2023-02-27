@@ -1,72 +1,73 @@
 package controller
 
 import (
-	"count_num/pkg/dao/impl"
-	"count_num/pkg/model"
-	"count_num/pkg/utils"
-	"count_num/pkg/web/auth"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"io/ioutil"
+
+	"github.com/RoyJoel/TennisMomentBackEnd/package/dao/impl"
+	"github.com/RoyJoel/TennisMomentBackEnd/package/model"
+	"github.com/RoyJoel/TennisMomentBackEnd/package/utils"
+	"github.com/RoyJoel/TennisMomentBackEnd/package/web/auth"
+	"github.com/gin-gonic/gin"
 )
 
-type UserControllerImpl struct {
-	dao *impl.UserDaoImpl
+type PlayerControllerImpl struct {
+	dao *impl.PlayerDaoImpl
 }
 
-type UserController interface {
-	CreateUser(c *gin.Context)
-	FindUserByLoginNameAndPwd(c *gin.Context)
+type PlayerController interface {
+	CreatePlayer(c *gin.Context)
+	FindPlayerByLoginNameAndPwd(c *gin.Context)
 	Register(c *gin.Context)
 }
 
-func NewUserController() *UserControllerImpl {
-	return &UserControllerImpl{dao: impl.NewUserDaoImpl()}
+func NewPlayerController() *PlayerControllerImpl {
+	return &PlayerControllerImpl{dao: impl.NewPlayerDaoImpl()}
 }
 
-func (impl UserControllerImpl) CreateUser(c *gin.Context) {
+func (impl PlayerControllerImpl) CreatePlayer(c *gin.Context) {
 	body := c.Request.Body
 	bytes, err := ioutil.ReadAll(body)
-	user := model.User{}
-	json.Unmarshal(bytes, &user)
+	player := model.Player{}
+	json.Unmarshal(bytes, &player)
 	if err != nil {
 		panic(err)
 	}
-	res := impl.dao.CreateUser(c, user)
+	res := impl.dao.CreatePlayer(c, player)
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
 }
 
-func (impl UserControllerImpl) FindUserByLoginNameAndPwd(c *gin.Context) {
+func (impl PlayerControllerImpl) FindPlayerByLoginNameAndPwd(c *gin.Context) {
 	body := c.Request.Body
 	bytes, err := ioutil.ReadAll(body)
-	user := model.User{}
-	json.Unmarshal(bytes, &user)
+	player := model.Player{}
+	json.Unmarshal(bytes, &player)
 	if err != nil {
 		panic(err)
 	}
-	userByLoginName := impl.dao.GetUserByLoginName(c, user.LoginName)
+	// playerByLoginName := impl.dao.GetPlayerByLoginName(c, player.LoginName)
 	//密码通过
-	if userByLoginName.Pwd == utils.GetMd5Str(user.Pwd) {
-		setToken := auth.SetToken(c, utils.GetTokenStr(), user)
-		c.JSON(200, map[string]interface{}{"code": 0, "msg": setToken, "count": 0, "data": utils.GetTokenStr()})
-	} else {
-		if userByLoginName.Id == 0 {
-			c.JSON(200, map[string]interface{}{"code": 0, "msg": "账号不存在", "count": 0, "data": "-1"})
-		} else {
-			c.JSON(200, map[string]interface{}{"code": 0, "msg": "密码错误", "count": 0, "data": "-1"})
-		}
-	}
+	// if playerByLoginName.Pwd == utils.GetMd5Str(player.Pwd) {
+	setToken := auth.SetToken(c, utils.GetTokenStr(), player)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": setToken, "count": 0, "data": utils.GetTokenStr()})
+	// } else {
+	// 	if playerByLoginName.Id == 0 {
+	// 		c.JSON(200, map[string]interface{}{"code": 0, "msg": "账号不存在", "count": 0, "data": "-1"})
+	// 	} else {
+	// 		c.JSON(200, map[string]interface{}{"code": 0, "msg": "密码错误", "count": 0, "data": "-1"})
+	// 	}
+	// }
 }
 
-func (impl UserControllerImpl) Register(c *gin.Context) {
+func (impl PlayerControllerImpl) Register(c *gin.Context) {
 	body := c.Request.Body
 	bytes, err := ioutil.ReadAll(body)
-	user := model.User{}
-	json.Unmarshal(bytes, &user)
+	player := model.Player{}
+	json.Unmarshal(bytes, &player)
 	if err != nil {
 		panic(err)
 	}
-	user.Role = 1
-	res := impl.dao.CreateUser(c, user)
+	// player.Role = 1
+	res := impl.dao.CreatePlayer(c, player)
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
 }

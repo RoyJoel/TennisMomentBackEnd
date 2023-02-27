@@ -1,6 +1,6 @@
 package grpc
 
-import "count_num/pkg/rpc"
+import "github.com/RoyJoel/TennisMomentBackEnd/package/rpc"
 
 func Run() {
 	rpc.RunGRPC()

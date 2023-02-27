@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"count_num/pkg/web/auth"
+	"github.com/RoyJoel/TennisMomentBackEnd/package/web/auth"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"

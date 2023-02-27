@@ -2,16 +2,18 @@ package auth
 
 import (
 	"context"
-	"count_num/pkg/config"
-	model2 "count_num/pkg/model"
 	"encoding/json"
 	"fmt"
-	"github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2/model"
-	a "github.com/casbin/xorm-adapter/v2"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"time"
+
+	"github.com/RoyJoel/TennisMomentBackEnd/package/config"
+	model2 "github.com/RoyJoel/TennisMomentBackEnd/package/model"
+
+	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v2/model"
+	a "github.com/casbin/xorm-adapter/v3"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -23,7 +25,7 @@ var (
 
 func init() {
 	var err error
-	adapter, err = a.NewAdapter("mysql", "root:12345@tcp(127.0.0.1:3306)/go_app", true)
+	adapter, err = a.NewAdapter("mysql", "root:@tcp(127.0.0.1:3306)/tennismoment_app", true)
 	if err != nil {
 		log.Fatalf("error: adapter: %s", err)
 	}
@@ -51,8 +53,8 @@ func init() {
 	}
 }
 
-//自定义匹配函数
-//规则： (r.sub == p.sub && r.obj == p.obj) || (r.sub == p.sub && p.obj == '*')
+// 自定义匹配函数
+// 规则： (r.sub == p.sub && r.obj == p.obj) || (r.sub == p.sub && p.obj == '*')
 func KeyMatchFunc(args ...interface{}) (interface{}, error) {
 	KeyMatch := func(rsub, psub, robj, pobj string) bool {
 		return (rsub == psub && robj == pobj) || (rsub == psub && pobj == "*")
@@ -78,21 +80,21 @@ func DeletePolicy(role string, res string, action string) bool {
 	return result
 }
 
-func SetToken(ctx context.Context, token string, user model2.User) bool {
-	RDB.Set(ctx, token, user, TokenTimeOut)
+func SetToken(ctx context.Context, token string, player model2.Player) bool {
+	RDB.Set(ctx, token, player, TokenTimeOut)
 	return true
 }
 
-func GetToken(ctx context.Context, token string) model2.User {
-	var user model2.User
+func GetToken(ctx context.Context, token string) model2.Player {
+	var player model2.Player
 	u, err := RDB.Get(ctx, token).Result()
 	if len(u) == 0 {
-		return user
+		return player
 	}
-	err = json.Unmarshal([]byte(u), &user)
+	err = json.Unmarshal([]byte(u), &player)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(user)
-	return user
+	fmt.Println(player)
+	return player
 }

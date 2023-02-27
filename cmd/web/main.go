@@ -1,6 +1,6 @@
 package web
 
-import "count_num/pkg/web"
+import "github.com/RoyJoel/TennisMomentBackEnd/package/web"
 
 func Run() {
 	web.RunHttp()

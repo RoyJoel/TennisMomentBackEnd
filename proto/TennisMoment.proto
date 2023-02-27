@@ -1,0 +1,70 @@
+syntax = "proto3";  //指定语法格式
+package proto;  //指定生成的 xx.pb.go 的包名字；
+
+option go_package = "../proto"; //go语言下指定包的名称
+
+//service接口
+service NumInfoService {
+  //rpc接口中的方法
+  rpc GetNumInfoById(InfoRequest) returns (InfoResponse){}
+  rpc AddNumByKey(InfoRequest) returns (InfoResponse){}
+  rpc FindNumInfoByKey(InfoRequest) returns (InfoResponse){}
+  rpc SaveNumInfo(InfoRequest) returns (InfoResponse){}
+  rpc DeleteById(InfoRequest) returns (InfoResponse){}
+  rpc FindAll(InfoRequest) returns (InfoResponse){}
+}
+
+//请求的数据格式 message 对应生成的代码中的struct，[修饰符] 类型 字段名 = 标识符
+message PlayerInfoRequest{
+  int64 id = 1;
+  string name = 2 ;
+  string loginName = 3;
+  []byte icon = 4;
+  string sex = 5;
+  int64 age = 6;
+  int64 yearsPlayed = 7;
+  float32 height = 8;
+  float32 width = 9;
+  string grip = 10;
+  string backhand = 11;
+}
+
+message StatsInfoRequest{
+  int64 aces = 1;
+  int64 doubleFaults = 2;
+  int64 firstServePoints = 3;
+  int64 firstServePointsIn = 4
+  int64 firstServePointsWon = 5;
+  int64 secondServePoints = 6;
+  int64 secondServePointsWon = 7;
+  int64 breakPointsFaced = 8;
+  int64 breakPointsSaved = 9;
+  int64 serveGamesPlayed = 10;
+  int64 serveGamesWon = 11;
+  int64 totalServePointsWon = 12;
+  int64 firstServeReturnPoints = 13;
+  int64 firstServeReturnAces = 14;
+  int64 firstServeReturnPointsWon = 15;
+  int64 secondServeReturnPoints = 16;
+  int64 secondServeReturnAces = 17;
+  int64 secondServeReturnPointsWon = 18;
+  int64 breakPointsOpportunities = 19;
+  int64 breakPointsConverted = 20;
+  int64 returnGamesPlayed = 21;
+  int64 returnGamesWon = 22;
+  int64 totalReturnPointsWon = 23;
+  int64 totalPointsWon = 24;
+  int64 netPoints = 25;
+  int64 unforcedErrors = 26;
+  int64 forehandWinners = 27;
+  int64 backhandWinners = 28;
+  int64 playerId = 29;
+  Player player = 30;
+}
+
+message InfoResponse{
+  int64 code = 1;
+  string msg = 2;
+  int64 count = 3;
+  string data = 4;
+}
