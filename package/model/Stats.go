@@ -5,36 +5,31 @@ import (
 )
 
 type Stats struct {
+	Id                         int64 `json:"id"`
 	Aces                       int64 `json:"aces"`
-	DoubleFaults               int64 `json:"doubleFaults"`
-	FirstServePoints           int64 `json:"firstServePoints"`
-	FirstServePointsIn         int64 `json:"firstServePointsIn"`
-	FirstServePointsWon        int64 `json:"firstServePointsWon"`
-	SecondServePoints          int64 `json:"secondServePoints"`
-	SecondServePointsWon       int64 `json:"secondServePointsWo"`
+	DoubleFaults               int64 `json:”doubleFaults"`
+	ServePoints                int64 `json:"servePoints"`
+	FirstServePoints           int64 `json:”firstServePoints"`
+	FirstServePointsIn         int64 `json:”firstServePointsIn”`
+	FirstServePointsWon        int64 `json:”firstServePointsWon"`
+	SecondServePointsWon       int64 `json:”secondServePointsWo"`
 	BreakPointsFaced           int64 `json:"breakPointsFaced"`
 	BreakPointsSaved           int64 `json:"breakPointsSaved"`
 	ServeGamesPlayed           int64 `json:"serveGamesPlayed"`
-	ServeGamesWon              int64 `json:"serveGamesWon"`
-	TotalServePointsWon        int64 `json:"totalServePointsWon"`
+	ServeGamesWon              int64 `json:”serveGamesWon"`
+	ReturnAces                 int64 `json:"returnAces"`
+	ReturnServePoints          int64 `json:"returnServePoints"`
 	FirstServeReturnPoints     int64 `json:"firstServeReturnPoints"`
-	FirstServeReturnAces       int64 `json:"firstServeReturnAces"`
 	FirstServeReturnPointsWon  int64 `json:"firstServeReturnPointsWon"`
-	SecondServeReturnPoints    int64 `json:"secondServeReturnPoints"`
-	SecondServeReturnAces      int64 `json:"secondServeReturnAces"`
 	SecondServeReturnPointsWon int64 `json:"secondServeReturnPointsWon"`
 	BreakPointsOpportunities   int64 `json:"breakPointsOpportunities"`
 	BreakPointsConverted       int64 `json:"breakPointsConverted"`
 	ReturnGamesPlayed          int64 `json:"returnGamesPlayed"`
-	ReturnGamesWon             int64 `json:"returnGamesWon"`
-	TotalReturnPointsWon       int64 `json:"totalReturnPointsWon"`
-	TotalPointsWon             int64 `json:"totalPointsWon"`
+	ReturnGamesWon             int64 `json:”returnGamesWon"`
 	NetPoints                  int64 `json:"netPoints"`
 	UnforcedErrors             int64 `json:"unforcedErrors"`
 	ForehandWinners            int64 `json:"forehandWinners"`
 	BackhandWinners            int64 `json:"backhandWinners"`
-	PlayerId                   int64 `json:"player_id" gorm:"not null"`
-	Player                     Player 
 }
 
 func (stats Stats) TableName() string {
@@ -43,35 +38,31 @@ func (stats Stats) TableName() string {
 
 func (stats Stats) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
+		"id":                         stats.Id,
 		"aces":                       stats.Aces,
 		"doubleFaults":               stats.DoubleFaults,
+		"servePoints":                stats.ServePoints,
 		"firstServePoints":           stats.FirstServePoints,
 		"firstServePointsIn":         stats.FirstServePointsIn,
 		"firstServePointsWon":        stats.FirstServePointsWon,
-		"secondServePoints":          stats.SecondServePoints,
 		"secondServePointsWon":       stats.SecondServePointsWon,
 		"breakPointsFaced":           stats.BreakPointsFaced,
 		"breakPointsSaved":           stats.BreakPointsSaved,
 		"serveGamesPlayed":           stats.ServeGamesPlayed,
 		"serveGamesWon":              stats.ServeGamesWon,
-		"totalServePointsWon":        stats.TotalServePointsWon,
+		"returnAces":                 stats.ReturnAces,
+		"returnServePoints":          stats.ReturnServePoints,
 		"firstServeReturnPoints":     stats.FirstServeReturnPoints,
-		"firstServeReturnAces":       stats.FirstServeReturnAces,
 		"firstServeReturnPointsWon":  stats.FirstServeReturnPointsWon,
-		"secondServeReturnPoints":    stats.SecondServeReturnPoints,
-		"secondServeReturnAces":      stats.SecondServeReturnAces,
 		"secondServeReturnPointsWon": stats.SecondServeReturnPointsWon,
 		"breakPointsOpportunities":   stats.BreakPointsOpportunities,
 		"breakPointsConverted":       stats.BreakPointsConverted,
 		"returnGamesPlayed":          stats.ReturnGamesPlayed,
 		"returnGamesWon":             stats.ReturnGamesWon,
-		"totalReturnPointsWon":       stats.TotalReturnPointsWon,
-		"totalPointsWon":             stats.TotalPointsWon,
 		"netPoints":                  stats.NetPoints,
 		"unforcedErrors":             stats.UnforcedErrors,
 		"forehandWinners":            stats.ForehandWinners,
 		"backhandWinners":            stats.BackhandWinners,
-		"player_id":                  stats.PlayerId,
 	})
 }
 

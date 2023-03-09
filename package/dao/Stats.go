@@ -1,8 +1,9 @@
 package dao
 
 import (
-	"github.com/RoyJoel/TennisMomentBackEnd/package/model"
 	"context"
+
+	"github.com/RoyJoel/TennisMomentBackEnd/package/model"
 )
 
 type StatsDAO interface {
@@ -10,8 +11,8 @@ type StatsDAO interface {
 	AddStats(ctx context.Context, info model.Stats) bool
 	// //根据Key获取一个
 	// GetStatsByKey(ctx context.Context, url string) model.Stats
-	// //查看全部
-	// FindAllStats(ctx context.Context, page int, limit int) []model.Stats
+	//查看全部
+	FindAllStats(ctx context.Context, page int, limit int) []model.Stats
 	// //根据Key修改
 	// UpdateStatsByKey(ctx context.Context, info model.Stats) bool
 	// //删除一个

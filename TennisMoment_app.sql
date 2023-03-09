@@ -1,7 +1,7 @@
-CREATE TABLE Player
+-- Active: 1677501433605@@116.62.121.33@3306@tennismoment_app
+CREATE TABLE `Player`
 (
-	`id`          int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	`login_name`   VARCHAR(255) NOT NULL,
+	`login_name`   VARCHAR(255) PRIMARY KEY NOT NULL,
 	`name`        varchar(255) NOT NULL,
 	`icon`        MEDIUMBLOB NOT NULL,
 	`sex`         VARCHAR(255) NOT NULL,
@@ -10,59 +10,86 @@ CREATE TABLE Player
 	`height`      DECIMAL(20) NOT NULL,
 	`width`       DECIMAL(20) NOT NULL,
 	`grip`        VARCHAR(255) NOT NULL,
-	`backHand`    VARCHAR(255) NOT NULL
+	`backhand`    VARCHAR(255) NOT NULL,
+	`point` int(11) NOT null,
+	`is_adult` BOOLEAN NOT NULL,
+	`career_stats_id` INT(11) NOT NULL,
+	`friends` VARCHAR(255) NOT null,
+
+	Foreign Key (`friends`) REFERENCES Relationship(`login_name`)
+);
+
+CREATE TABLE `Relationship`
+(
+	`login_name` VARCHAR(255) NOT NULL,
+	`friend_login_name` VARCHAR(255) NOT NULL,
+	INDEX (`friend_login_name`)
 );
 
 CREATE TABLE `Stats`
 (
+	`id` INT(11) AUTO_INCREMENT PRIMARY KEY NOT NULL, 
 	`aces`         INT(11) NOT NULL,
-	`doubleFaults` INT(11) NOT NULL,
-	`firstServePoints` INT(11) NOT NULL,
-	`firstServePointsIn` INT(11) NOT NULL,
-	`firstServePointsWon` INT(11) NOT NULL,
-	`secondServePoints` INT(11) NOT NULL,
-	`secondServePointsWon` INT(11) NOT NULL,
-	`breakPointsFaced` INT(11) NOT NULL,
-	`breakPointsSaved` INT(11) NOT NULL,
-	`serveGamesPlayed` INT(11) NOT NULL,
-	`serveGamesWon` INT(11) NOT NULL,
-	`totalServePointsWon` INT(11) NOT NULL,
-	`firstServeReturnPoints` INT(11) NOT NULL,
-	`firstServeReturnAces` INT(11) NOT NULL,
-	`firstServeReturnPointsWon` INT(11) NOT NULL,
-	`secondServeReturnPoints` INT(11) NOT NULL,
-	`secondServeReturnAces` INT(11) NOT NULL,
-	`secondServeReturnPointsWon` INT(11) NOT NULL,
-	`breakPointsOpportunities` INT(11) NOT NULL,
-	`breakPointsConverted` INT(11) NOT NULL,
-	`returnGamesPlayed` INT(11) NOT NULL,
-	`returnGamesWon` INT(11) NOT NULL,
-	`totalReturnPointsWon`INT(11) NOT NULL,
-	`totalPointsWon` INT(11) NOT NULL,
-	`netPoints` INT(11) NOT NULL,
-	`unforcedErrors` INT(11) NOT NULL,
-	`forehandWinners` INT(11) NOT NULL,
-	`backhandWinners` INT(11) NOT NULL,
-	`player_id` int(11) NOT NULL UNIQUE,
+	`double_faults` INT(11) NOT NULL,
+	`first_serve_points` INT(11) NOT NULL,
+	`first_serve_points_in` INT(11) NOT NULL,
+	`first_serve_points_won` INT(11) NOT NULL,
+	`second_serve_points` INT(11) NOT NULL,
+	`second_serve_points_won` INT(11) NOT NULL,
+	`break_points_faced` INT(11) NOT NULL,
+	`break_points_saved` INT(11) NOT NULL,
+	`serve_games_played` INT(11) NOT NULL,
+	`serve_games_won` INT(11) NOT NULL,
+	`total_serve_points_won` INT(11) NOT NULL,
+	`first_serve_return_points` INT(11) NOT NULL,
+	`first_serve_return_aces` INT(11) NOT NULL,
+	`first_serve_return_points_won` INT(11) NOT NULL,
+	`second_serve_return_points` INT(11) NOT NULL,
+	`second_serve_return_aces` INT(11) NOT NULL,
+	`second_serve_return_points_won` INT(11) NOT NULL,
+	`break_points_opportunities` INT(11) NOT NULL,
+	`break_points_converted` INT(11) NOT NULL,
+	`return_games_played` INT(11) NOT NULL,
+	`return_games_won` INT(11) NOT NULL,
+	`total_return_points_won`INT(11) NOT NULL,
+	`total_points_won` INT(11) NOT NULL,
+	`net_points` INT(11) NOT NULL,
+	`unforced_errors` INT(11) NOT NULL,
+	`forehand_winners` INT(11) NOT NULL,
+	`backhand_winners` INT(11) NOT NULL,
+	`player_login_name` VARCHAR(255) NOT NULL UNIQUE,
 
-	Foreign Key (`player_id`) REFERENCES Player(`id`)
+	Foreign Key (`player_login_name`) REFERENCES Player(`login_name`)
 
- );
+ )AUTO_INCREMENT = 0;
 
-/* CREATE TABLE `Game`
-{
-	`id`         int(11) NOT NULL AUTO_INCREMENT,
-	`date`       DATE NOT NULL,
+ CREATE TABLE `PlayerStats`
+(
+`id` INT(11) PRIMARY KEY NOT NULL,
+	`login_name` VARCHAR(255) NOT NULL,
+	INDEX (`id`)
+);
+
+CREATE TABLE `Game`
+(
+	`date`       BIGINT NOT NULL,
 	`place`      VARCHAR(255) NOT NULL,
+	`surface` VARCHAR(255) NOT NULL,
+	`set_num` int(11) NOT NULL,
+	`game_num` INT(11) NOT NULL,
+	`is_golden_goal` BOOLEAN NOT NULL,
+	`is_completed` BOOLEAN NOT NULL,
+	`player1_login_name` VARCHAR(255) NOT NULL,
+	`player1_stats_id` INT(11) NOT NULL,
+	`player2_login_name` VARCHAR(255) NOT NULL,
+	`player2_stats_id` INT(11) NOT NULL,
+	`result` JSON not null,
 
-	Foreign Key (`winner_id`) REFERENCES Player(`id`)
-	Foreign Key (`winnerStats`) REFERENCES Stats(`id`)
-	Foreign Key (`loser`) REFERENCES Player(`id`)
-	Foreign Key (`loserStats`) REFERENCES Stats(`id`)
-
-	UNIQUE(`winner`)
-	UNIQUE('loser')
-} ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8; */
+	Foreign Key (`player1_login_name`) REFERENCES Player(`login_name`),
+	Foreign Key (`player1_stats_id`) REFERENCES Stats(`id`),
+	Foreign Key (`player2_login_name`) REFERENCES Player(`login_name`),
+	Foreign Key (`player2_stats_id`) REFERENCES Stats(`id`)
+);
 
 /* CREATE TABLE `Player_Game_Relation`
 {

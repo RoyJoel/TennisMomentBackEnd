@@ -25,7 +25,7 @@ var (
 
 func init() {
 	var err error
-	adapter, err = a.NewAdapter("mysql", "root:@tcp(127.0.0.1:3306)/tennismoment_app", true)
+	adapter, err = a.NewAdapter("mysql", "root:12345678@tcp(116.62.121.33:3306)/tennismoment_app", true)
 	if err != nil {
 		log.Fatalf("error: adapter: %s", err)
 	}

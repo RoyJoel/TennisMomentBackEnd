@@ -5,19 +5,22 @@ import (
 )
 
 type Player struct {
-	Id          int64   `json:"id"`
-	LoginName   string  `json:"loginName"`
-	Name        string  `json:"name"`
-	Icon        []byte  `json:"icon"`
-	Sex         string  `json:"sex"`
-	Age         int64   `json:"age"`
-	YearsPlayed int64   `json:"yearsPlayed"`
-	Height      float32 `json:"height"`
-	Width       float32 `json:"width"`
-	Grip        string  `json:"grip"`
-	Backhand    string  `json:"backhand"`
-	// friends     []Player `json:"friends"`
-	// gamesPlayed []Game   `json:"gamesPlayed"`
+	LoginName     string       `json:"loginName"`
+	Name          string       `json:"name"`
+	Icon          string       `json:"icon"`
+	Sex           string       `json:"sex"`
+	Age           int64        `json:"age"`
+	YearsPlayed   int64        `json:"yearsPlayed"`
+	Height        float32      `json:"height"`
+	Width         float32      `json:"width"`
+	Grip          string       `json:"grip"`
+	Backhand      string       `json:"backhand"`
+	Points        int64        `json:"points"`
+	IsAdult       bool         `json:"isAdult"`
+	CareerStatsId int          `json:"careerStatsId,omitempty"`
+	Friends       string       `json:"Friends,omitempty"`
+	PlayerStats   PlayerStats  `gorm:"foreignKey:Friends;references:LoginName"`
+	Relationship  Relationship `gorm:"foreignKey:Friends;references:LoginName"`
 }
 
 func (player Player) TableName() string {
@@ -26,19 +29,20 @@ func (player Player) TableName() string {
 
 func (player Player) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"id":          player.Id,
-		"loginName":   player.LoginName,
-		"name":        player.Name,
-		"icon":        player.Icon,
-		"sex":         player.Sex,
-		"age":         player.Age,
-		"yearsPlayed": player.YearsPlayed,
-		"height":      player.Height,
-		"width":       player.Width,
-		"grip":        player.Grip,
-		"backhand":    player.Backhand,
-		// "friends":     player.friends,
-		// "gamesPlayed": player.gamesPlayed,
+		"loginName":     player.LoginName,
+		"name":          player.Name,
+		"icon":          player.Icon,
+		"sex":           player.Sex,
+		"age":           player.Age,
+		"yearsPlayed":   player.YearsPlayed,
+		"height":        player.Height,
+		"width":         player.Width,
+		"grip":          player.Grip,
+		"backhand":      player.Backhand,
+		"points":        player.Points,
+		"isAdult":       player.IsAdult,
+		"careerStatsId": player.CareerStatsId,
+		"friends":       player.Friends,
 	})
 }
 
