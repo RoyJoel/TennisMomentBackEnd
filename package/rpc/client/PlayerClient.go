@@ -32,7 +32,7 @@ func playerActive() {
 	client := proto.NewPlayerInfoServiceClient(conn)
 	//3 调用grpc服务
 	req := new(proto.PlayerInfoRequest)
-	req.Id = 20
+	req.LoginName = 20
 	resp, err := client.FindAllPlayers(context.Background(), req)
 	if err != nil {
 		log.Fatalf("请求错误 : %v\n", err)

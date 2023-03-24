@@ -29,21 +29,23 @@ type GameInfoRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// [修饰符] 类型 字段名 = 标识符
-	Date                float64         `protobuf:"varint,1,opt,name=date,proto3" json:"date,omitempty"`
-	Place               string          `protobuf:"bytes,2,opt,name=place,proto3" json:"place,omitempty"`
-	Surface             string          `protobuf:"bytes,3,opt,name=surface,proto3" json:"surface,omitempty"`
-	SetNum              int             `protobuf:"varint,4,opt,name=setNum,proto3" json:"setNum,omitempty"`
-	GameNum             int             `protobuf:"varint,5,opt,name=gameNum,proto3" json:"gameNum,omitempty"`
-	IsGoldenGoal        bool            `protobuf:"varint,6,opt,name=isGoldenGoal,proto3" json:"isGoldenGoal,omitempty"`
-	IsPlayer1Serving    bool            `protobuf:"varint,7,opt,name=isPlayer1Serving,proto3" json:"isPlayer1Serving,omitempty"`
-	IsCompleted         bool            `protobuf:"float,8,opt,name=isCompleted,proto3" json:"isCompleted,omitempty"`
-	Player1LoginName    string          `protobuf:"float,9,opt,name=player1LoginName,proto3" json:"player1LoginName,omitempty"`
-	Player1StatsId      int             `protobuf:"varint,10,opt,name=player1StatsId,proto3" json:"player1StatsId,omitempty"`
-	Player2LoginName    string          `protobuf:"bytes,11,opt,name=player2LoginName,proto3" json:"player2LoginName,omitempty"`
-	Player2StatsId      int             `protobuf:"varint,12,opt,name=player2StatsId ,proto3" json:"player2StatsId,omitempty"`
-	IsPlayer1FirstServe bool            `protobuf:"varint,13,opt,name=isPlayer1FirstServe ,proto3" json:"isPlayer1FirstServe,omitempty"`
-	IsPlayer2FirstServe bool            `protobuf:"varint,14,opt,name=isPlayer2FirstServe ,proto3" json:"isPlayer2FirstServe,omitempty"`
-	Result              utils.IntMatrix `protobuf:"bytes,15,opt,name=result,proto3" json:"result,omitempty"`
+	Date                float64          `protobuf:"varint,1,opt,name=date,proto3" json:"date,omitempty"`
+	Place               string           `protobuf:"bytes,2,opt,name=place,proto3" json:"place,omitempty"`
+	Surface             string           `protobuf:"bytes,3,opt,name=surface,proto3" json:"surface,omitempty"`
+	SetNum              int              `protobuf:"varint,4,opt,name=setNum,proto3" json:"setNum,omitempty"`
+	GameNum             int              `protobuf:"varint,5,opt,name=gameNum,proto3" json:"gameNum,omitempty"`
+	IsGoldenGoal        bool             `protobuf:"varint,6,opt,name=isGoldenGoal,proto3" json:"isGoldenGoal,omitempty"`
+	IsPlayer1Serving    bool             `protobuf:"varint,7,opt,name=isPlayer1Serving,proto3" json:"isPlayer1Serving,omitempty"`
+	IsCompleted         bool             `protobuf:"float,8,opt,name=isCompleted,proto3" json:"isCompleted,omitempty"`
+	Player1LoginName    string           `protobuf:"float,9,opt,name=player1LoginName,proto3" json:"player1LoginName,omitempty"`
+	Player1StatsId      int              `protobuf:"varint,10,opt,name=player1StatsId,proto3" json:"player1StatsId,omitempty"`
+	Player2LoginName    string           `protobuf:"bytes,11,opt,name=player2LoginName,proto3" json:"player2LoginName,omitempty"`
+	Player2StatsId      int              `protobuf:"varint,12,opt,name=player2StatsId ,proto3" json:"player2StatsId,omitempty"`
+	IsPlayer1FirstServe bool             `protobuf:"varint,13,opt,name=isPlayer1FirstServe ,proto3" json:"isPlayer1FirstServe,omitempty"`
+	IsPlayer2FirstServe bool             `protobuf:"varint,14,opt,name=isPlayer2FirstServe ,proto3" json:"isPlayer2FirstServe,omitempty"`
+	IsPlayer1Left       bool             `protobuf:"varint,15,opt,name=isPlayer1Left ,proto3" json:"isPlayer1Left,omitempty"`
+	IsChangePosition    bool             `protobuf:"varint,16,opt,name=isChangePosition ,proto3" json:"isChangePosition,omitempty"`
+	Result              utils.IntMatrix3 `protobuf:"bytes,17,opt,name=result,proto3" json:"result,omitempty"`
 }
 
 // func (x *GameInfoRequest) Reset() {
@@ -162,11 +164,25 @@ func (x *GameInfoRequest) GetPlayer2StatsId() int {
 	return 0
 }
 
-func (x *GameInfoRequest) GetResult() utils.IntMatrix {
+func (x *GameInfoRequest) GetIsPlayer1Left() bool {
+	if x != nil {
+		return x.IsPlayer1Left
+	}
+	return true
+}
+
+func (x *GameInfoRequest) GetIsChangePosition() bool {
+	if x != nil {
+		return x.IsChangePosition
+	}
+	return true
+}
+
+func (x *GameInfoRequest) GetResult() utils.IntMatrix3 {
 	if x != nil {
 		return x.Result
 	}
-	return make([][][]int, 0)
+	return make([][][]int64, 0)
 }
 
 type GameInfoResponse struct {

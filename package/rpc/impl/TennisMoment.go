@@ -9,14 +9,15 @@ import (
 	"github.com/RoyJoel/TennisMomentBackEnd/proto"
 )
 
-type PlayerInfoRPCImpl struct {
-	dao *impl.PlayerDaoImpl
+type TennisMomentRPCImpl struct {
+	dao *impl.TennisMomentDaoImpl
 }
 
-func NewPlayerControllerImpl() *PlayerInfoRPCImpl {
-	return &PlayerInfoRPCImpl{dao: impl.NewPlayerDaoImpl()}
+func NewTennisMomentControllerImpl() *TennisMomentRPCImpl {
+	return &TennisMomentRPCImpl{dao: impl.NewTennisMomentDaoImpl()}
 }
-func (impl *PlayerInfoRPCImpl) AddPlayer(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
+func (impl *TennisMomentRPCImpl) AddPlayer(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
+	Id := request.GetId()
 	LoginName := request.GetLoginName()
 	Name := request.GetName()
 	Icon := request.GetIcon()
@@ -29,28 +30,23 @@ func (impl *PlayerInfoRPCImpl) AddPlayer(ctx context.Context, request *proto.Pla
 	Backhand := request.GetBackhand()
 	Points := request.GetPoints()
 	IsAdult := request.GetIsAdult()
-	CareerStatsId := request.GetCareerStatsId()
-	Friends := request.GetFriends()
-	Relationship := request.GetRelationship()
-	PlayerStats := request.GetPlayerStats()
+	CareerStats := request.GetCareerStats()
 
 	impl.dao.AddPlayer(ctx, model.Player{
-		LoginName,
-		Name,
-		Icon,
-		Sex,
-		Age,
-		YearsPlayed,
-		Height,
-		Width,
-		Grip,
-		Backhand,
-		Points,
-		IsAdult,
-		CareerStatsId,
-		Friends,
-		PlayerStats,
-		Relationship,
+		Id:            Id,
+		LoginName:     LoginName,
+		Name:          Name,
+		Icon:          Icon,
+		Sex:           Sex,
+		Age:           Age,
+		YearsPlayed:   YearsPlayed,
+		Height:        Height,
+		Width:         Width,
+		Grip:          Grip,
+		Backhand:      Backhand,
+		Points:        Points,
+		IsAdult:       IsAdult,
+		CareerStatsId: CareerStats.Id,
 	})
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: "true"}, nil
 }
@@ -62,7 +58,8 @@ func (impl *PlayerInfoRPCImpl) AddPlayer(ctx context.Context, request *proto.Pla
 // 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(info)}, nil
 // }
 
-func (impl *PlayerInfoRPCImpl) UpdatePlayer(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
+func (impl *TennisMomentRPCImpl) UpdatePlayer(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
+	Id := request.GetId()
 	LoginName := request.GetLoginName()
 	Name := request.GetName()
 	Icon := request.GetIcon()
@@ -75,27 +72,22 @@ func (impl *PlayerInfoRPCImpl) UpdatePlayer(ctx context.Context, request *proto.
 	Backhand := request.GetBackhand()
 	Points := request.GetPoints()
 	IsAdult := request.GetIsAdult()
-	CareerStatsId := request.GetCareerStatsId()
-	Friends := request.GetFriends()
-	Relationship := request.GetRelationship()
-	PlayerStats := request.GetPlayerStats()
-	impl.dao.UpdatePlayer(ctx, model.Player{
-		LoginName,
-		Name,
-		Icon,
-		Sex,
-		Age,
-		YearsPlayed,
-		Height,
-		Width,
-		Grip,
-		Backhand,
-		Points,
-		IsAdult,
-		CareerStatsId,
-		Friends,
-		PlayerStats,
-		Relationship,
+	CareerStats := request.GetCareerStats()
+	impl.dao.UpdatePlayer(ctx, model.PlayerResponse{
+		Id:          Id,
+		LoginName:   LoginName,
+		Name:        Name,
+		Icon:        Icon,
+		Sex:         Sex,
+		Age:         Age,
+		YearsPlayed: YearsPlayed,
+		Height:      Height,
+		Width:       Width,
+		Grip:        Grip,
+		Backhand:    Backhand,
+		Points:      Points,
+		IsAdult:     IsAdult,
+		CareerStats: CareerStats,
 	})
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: "true"}, nil
 }
@@ -106,35 +98,29 @@ func (impl *PlayerInfoRPCImpl) UpdatePlayer(ctx context.Context, request *proto.
 // 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: "true"}, nil
 // }
 
-func (impl *PlayerInfoRPCImpl) SearchPlayer(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
-	loginName := request.GetLoginName()
-	Players := impl.dao.GetPlayerInfo(ctx, loginName)
+func (impl *TennisMomentRPCImpl) SearchPlayer(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
+	id := request.GetId()
+	Players := impl.dao.GetPlayerInfo(ctx, id)
 	infos, _ := json.Marshal(Players)
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(infos)}, nil
-
 }
 
-func (impl *PlayerInfoRPCImpl) GetPlayerInfo(ctx context.Context, req *proto.PlayerInfoRequest) (resp *proto.PlayerInfoResponse, err error) {
-	loginName := req.GetLoginName()
-	Players := impl.dao.GetPlayerInfo(ctx, loginName)
+func (impl *TennisMomentRPCImpl) GetPlayerInfo(ctx context.Context, req *proto.PlayerInfoRequest) (resp *proto.PlayerInfoResponse, err error) {
+	id := req.GetId()
+	Players := impl.dao.GetPlayerInfo(ctx, id)
 	infos, _ := json.Marshal(Players)
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(infos)}, nil
-
 }
 
-func (impl *PlayerInfoRPCImpl) AddFriend(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
-	loginName := request.GetLoginName()
-	Players := impl.dao.GetPlayerInfo(ctx, loginName)
-
+func (impl *TennisMomentRPCImpl) AddFriend(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
+	id := request.GetId()
+	Players := impl.dao.GetPlayerInfo(ctx, id)
 	infos, _ := json.Marshal(Players)
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(infos)}, nil
-
 }
-func (impl *PlayerInfoRPCImpl) DeleteFriend(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
-	loginName := request.GetLoginName()
-	Players := impl.dao.GetPlayerInfo(ctx, loginName)
-
+func (impl *TennisMomentRPCImpl) DeleteFriend(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
+	id := request.GetId()
+	Players := impl.dao.GetPlayerInfo(ctx, id)
 	infos, _ := json.Marshal(Players)
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(infos)}, nil
-
 }

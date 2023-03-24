@@ -12,6 +12,7 @@ type Stats struct {
 	FirstServePoints           int64 `json:”firstServePoints"`
 	FirstServePointsIn         int64 `json:”firstServePointsIn”`
 	FirstServePointsWon        int64 `json:”firstServePointsWon"`
+	SecondServePointsIn        int64 `json:”secondServePointsIn”`
 	SecondServePointsWon       int64 `json:”secondServePointsWo"`
 	BreakPointsFaced           int64 `json:"breakPointsFaced"`
 	BreakPointsSaved           int64 `json:"breakPointsSaved"`
@@ -20,7 +21,9 @@ type Stats struct {
 	ReturnAces                 int64 `json:"returnAces"`
 	ReturnServePoints          int64 `json:"returnServePoints"`
 	FirstServeReturnPoints     int64 `json:"firstServeReturnPoints"`
+	FirstServeReturnPointsIn   int64 `json:"firstServeReturnPointsIn"`
 	FirstServeReturnPointsWon  int64 `json:"firstServeReturnPointsWon"`
+	SecondServeReturnPointsIn  int64 `json:"secondServeReturnPointsIn"`
 	SecondServeReturnPointsWon int64 `json:"secondServeReturnPointsWon"`
 	BreakPointsOpportunities   int64 `json:"breakPointsOpportunities"`
 	BreakPointsConverted       int64 `json:"breakPointsConverted"`
@@ -45,6 +48,7 @@ func (stats Stats) MarshalJSON() ([]byte, error) {
 		"firstServePoints":           stats.FirstServePoints,
 		"firstServePointsIn":         stats.FirstServePointsIn,
 		"firstServePointsWon":        stats.FirstServePointsWon,
+		"secondServePointsIn":        stats.SecondServePointsIn,
 		"secondServePointsWon":       stats.SecondServePointsWon,
 		"breakPointsFaced":           stats.BreakPointsFaced,
 		"breakPointsSaved":           stats.BreakPointsSaved,
@@ -53,7 +57,9 @@ func (stats Stats) MarshalJSON() ([]byte, error) {
 		"returnAces":                 stats.ReturnAces,
 		"returnServePoints":          stats.ReturnServePoints,
 		"firstServeReturnPoints":     stats.FirstServeReturnPoints,
+		"firstServeReturnPointsIn":   stats.FirstServeReturnPointsIn,
 		"firstServeReturnPointsWon":  stats.FirstServeReturnPointsWon,
+		"secondServeReturnPointsIn":  stats.SecondServeReturnPointsIn,
 		"secondServeReturnPointsWon": stats.SecondServeReturnPointsWon,
 		"breakPointsOpportunities":   stats.BreakPointsOpportunities,
 		"breakPointsConverted":       stats.BreakPointsConverted,

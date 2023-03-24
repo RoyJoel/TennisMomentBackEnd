@@ -5,8 +5,8 @@ import (
 )
 
 type PlayerStats struct {
-	LoginName string `json:"loginName"`
-	Id        int    `json:"id"`
+	PlayerId int64 `json:"playerId"`
+	StatsId        int64  `json:"statsId"`
 }
 
 func (PlayerStats PlayerStats) TableName() string {
@@ -15,8 +15,8 @@ func (PlayerStats PlayerStats) TableName() string {
 
 func (PlayerStats PlayerStats) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"loginName": PlayerStats.LoginName,
-		"id":        PlayerStats.Id,
+		"playerId": PlayerStats.PlayerId,
+		"statsId":        PlayerStats.StatsId,
 	})
 }
 

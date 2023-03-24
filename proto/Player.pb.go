@@ -28,22 +28,20 @@ type PlayerInfoRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// [修饰符] 类型 字段名 = 标识符
-	LoginName     string             `protobuf:"bytes,1,opt,name=loginName,proto3" json:"loginName,omitempty"`
-	Name          string             `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Icon          string             `protobuf:"bytes,3,opt,name=icon,proto3" json:"icon,omitempty"`
-	Sex           string             `protobuf:"varint,4,opt,name=sex,proto3" json:"sex,omitempty"`
-	Age           int64              `protobuf:"varint,5,opt,name=age,proto3" json:"age,omitempty"`
-	YearsPlayed   int64              `protobuf:"varint,6,opt,name=yearsPlayed,proto3" json:"yearsPlayed,omitempty"`
-	Height        float32            `protobuf:"float,7,opt,name=height,proto3" json:"height,omitempty"`
-	Width         float32            `protobuf:"float,8,opt,name=width,proto3" json:"width,omitempty"`
-	Grip          string             `protobuf:"bytes,9,opt,name=grip,proto3" json:"grip,omitempty"`
-	Backhand      string             `protobuf:"bytes,10,opt,name=backhand,proto3" json:"backhand,omitempty"`
-	Points        int64              `protobuf:"bytes,11,opt,name=points,proto3" json:"points,omitempty"`
-	IsAdult       bool               `protobuf:"bytes,12,opt,name=isAdult,proto3" json:"isAdult,omitempty"`
-	CareerStatsId int                `protobuf:"varint,13,opt,name=careerStatsId,proto3" json:"careerStatsId,omitempty"`
-	Friends       string             `protobuf:"bytes,14,rep,name=friends,proto3" json:"friends,omitempty""`
-	Relationship  model.Relationship `protobuf:"bytes,15,rep,name=Relationship,proto3" json:"relationship,omitempty""`
-	PlayerStats   model.PlayerStats  `protobuf:"bytes,16,rep,name=PlayerStats,proto3" json:"playerStats,omitempty""`
+	Id          int64       `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	LoginName   string      `protobuf:"bytes,2,opt,name=loginName,proto3" json:"loginName,omitempty"`
+	Name        string      `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Icon        string      `protobuf:"bytes,4,opt,name=icon,proto3" json:"icon,omitempty"`
+	Sex         string      `protobuf:"bytes,5,opt,name=sex,proto3" json:"sex,omitempty"`
+	Age         int64       `protobuf:"varint,6,opt,name=age,proto3" json:"age,omitempty"`
+	YearsPlayed int64       `protobuf:"varint,7,opt,name=yearsPlayed,proto3" json:"yearsPlayed,omitempty"`
+	Height      float32     `protobuf:"float,8,opt,name=height,proto3" json:"height,omitempty"`
+	Width       float32     `protobuf:"float,9,opt,name=width,proto3" json:"width,omitempty"`
+	Grip        string      `protobuf:"bytes,10,opt,name=grip,proto3" json:"grip,omitempty"`
+	Backhand    string      `protobuf:"bytes,11,opt,name=backhand,proto3" json:"backhand,omitempty"`
+	Points      int64       `protobuf:"bytes,12,opt,name=points,proto3" json:"points,omitempty"`
+	IsAdult     bool        `protobuf:"bytes,13,opt,name=isAdult,proto3" json:"isAdult,omitempty"`
+	CareerStats model.Stats `protobuf:"varint,14,opt,name=careerStats,proto3" json:"careerStats,omitempty"`
 }
 
 func (x *PlayerInfoRequest) Reset() {
@@ -76,6 +74,13 @@ func (x *PlayerInfoRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use PlayerInfoRequest.ProtoReflect.Descriptor instead.
 func (*PlayerInfoRequest) Descriptor() ([]byte, []int) {
 	return file_Player_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *PlayerInfoRequest) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
 }
 
 func (x *PlayerInfoRequest) GetLoginName() string {
@@ -162,32 +167,11 @@ func (x *PlayerInfoRequest) GetIsAdult() bool {
 	return true
 }
 
-func (x *PlayerInfoRequest) GetCareerStatsId() int {
+func (x *PlayerInfoRequest) GetCareerStats() model.Stats {
 	if x != nil {
-		return x.CareerStatsId
+		return x.CareerStats
 	}
-	return 0
-}
-
-func (x *PlayerInfoRequest) GetFriends() string {
-	if x != nil {
-		return x.Friends
-	}
-	return ""
-}
-
-func (x *PlayerInfoRequest) GetRelationship() model.Relationship {
-	if x != nil {
-		return x.Relationship
-	}
-	return model.Relationship{}
-}
-
-func (x *PlayerInfoRequest) GetPlayerStats() model.PlayerStats {
-	if x != nil {
-		return x.PlayerStats
-	}
-	return model.PlayerStats{}
+	return model.Stats{}
 }
 
 type PlayerInfoResponse struct {

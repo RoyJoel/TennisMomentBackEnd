@@ -15,34 +15,40 @@ func RunHttp() {
 	//解决跨域
 	r.Use(config.CorsConfig())
 	//路由组
+	userInfo := r.Group("/user")
+	{
+		userInfo.POST("/signIn", controller.NewTennisMomentControllerImpl().SignIn)
+		userInfo.POST("/signUp", controller.NewTennisMomentControllerImpl().SignUp)
+	}
+
 	playerInfo := r.Group("/player")
 	{
-		playerInfo.POST("/update", controller.NewPlayerControllerImpl().UpdatePlayer)
-		playerInfo.POST("/getInfo", controller.NewPlayerControllerImpl().GetPlayerInfo)
-		playerInfo.POST("/add", controller.NewPlayerControllerImpl().AddPlayer)
-		playerInfo.POST("/search", controller.NewPlayerControllerImpl().SearchPlayer)
+		playerInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdatePlayer)
+		playerInfo.POST("/getInfo", controller.NewTennisMomentControllerImpl().GetPlayerInfo)
+		playerInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddPlayer)
+		playerInfo.POST("/search", controller.NewTennisMomentControllerImpl().SearchPlayer)
 	}
 
 	friendInfo := r.Group("/friend")
 	{
-		friendInfo.POST("/add", controller.NewPlayerControllerImpl().AddFriend)
-		friendInfo.POST("/search", controller.NewPlayerControllerImpl().SearchFriend)
-		friendInfo.POST("/delete", controller.NewPlayerControllerImpl().DeleteFriend)
-		friendInfo.POST("/getAll", controller.NewPlayerControllerImpl().GetAllFriends)
+		friendInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddFriend)
+		friendInfo.POST("/search", controller.NewTennisMomentControllerImpl().SearchFriend)
+		friendInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteFriend)
+		friendInfo.POST("/getAll", controller.NewTennisMomentControllerImpl().GetAllFriends)
 	}
 
 	gameInfo := r.Group("/game")
 	{
-		gameInfo.POST("/update", controller.NewGameControllerImpl().UpdateGame)
-		gameInfo.POST("/add", controller.NewGameControllerImpl().AddGame)
-		gameInfo.POST("/searchAll", controller.NewGameControllerImpl().SearchAllGames)
-		gameInfo.POST("/search", controller.NewGameControllerImpl().SearchGame)
+		gameInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateGameAndStats)
+		gameInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddGame)
+		gameInfo.POST("/searchAll", controller.NewTennisMomentControllerImpl().SearchAllGames)
+		gameInfo.POST("/search", controller.NewTennisMomentControllerImpl().GetHistoryGames)
+		gameInfo.POST("/searchRecent", controller.NewTennisMomentControllerImpl().SearchRecentGames)
 	}
 
 	statsInfo := r.Group("/stats")
 	{
-		statsInfo.POST("/search", controller.NewStatsControllerImpl().SearchStats)
-		statsInfo.POST("/update", controller.NewStatsControllerImpl().UpdateStats)
+		statsInfo.POST("/search", controller.NewTennisMomentControllerImpl().SearchStats)
 	}
 
 	r.Run(":8080")

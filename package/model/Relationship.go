@@ -5,8 +5,8 @@ import (
 )
 
 type Relationship struct {
-	LoginName       string `json:"loginName"`
-	FriendLoginName string `json:"FriendLoginName"`
+	Player1Id       int64 `json:"player1Id"`
+	Player2Id int64 `json:"Player2Id"`
 }
 
 func (relationship Relationship) TableName() string {
@@ -15,8 +15,8 @@ func (relationship Relationship) TableName() string {
 
 func (relationship Relationship) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"loginName":       relationship.LoginName,
-		"friendLoginName": relationship.FriendLoginName,
+		"player1Id":       relationship.Player1Id,
+		"player2Id": relationship.Player2Id,
 	})
 }
 
