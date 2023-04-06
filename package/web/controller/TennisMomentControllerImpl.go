@@ -2,10 +2,12 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/RoyJoel/TennisMomentBackEnd/package/dao/impl"
+	"github.com/RoyJoel/TennisMomentBackEnd/package/middleware"
 	"github.com/RoyJoel/TennisMomentBackEnd/package/model"
 	"github.com/gin-gonic/gin"
 )
@@ -34,8 +36,9 @@ func (impl TennisMomentControllerImpl) AddGame(c *gin.Context) {
 func (impl TennisMomentControllerImpl) SearchRecentGames(c *gin.Context) {
 
 	type SearchGameRequest struct {
-		Id    int64 `json:"id"`
-		Limit int   `json:"limit"`
+		Id          int64 `json:"id"`
+		Limit       int   `json:"limit"`
+		IsCompleted bool  `json:"isCompleted"`
 	}
 
 	var req SearchGameRequest
@@ -43,7 +46,7 @@ func (impl TennisMomentControllerImpl) SearchRecentGames(c *gin.Context) {
 		// 处理错误
 	}
 
-	Games := impl.dao.GetRecentGames(c, req.Id, req.Limit)
+	Games := impl.dao.GetRecentGames(c, req.Id, req.Limit, req.IsCompleted)
 
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": Games})
 }
@@ -100,27 +103,50 @@ func (impl TennisMomentControllerImpl) AddPlayer(c *gin.Context) {
 		panic(err)
 	}
 	// player.Role = 1
-	res := impl.dao.AddPlayer(c, player)
+	res, _ := impl.dao.AddPlayer(c, player)
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
 }
 
 func (impl TennisMomentControllerImpl) SignUp(c *gin.Context) {
 	body := c.Request.Body
 	bytes, err := ioutil.ReadAll(body)
-	user := model.User{}
-	json.Unmarshal(bytes, &user)
+	User := model.User{}
+	json.Unmarshal(bytes, &User)
 	if err != nil {
 		panic(err)
 	}
 	// player.Role = 1
-	res := impl.dao.SignUp(c, user)
-	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+	user, res := impl.dao.SignUp(c, User)
+	type addResponse struct {
+		User model.User `json:"user"`
+		Res  bool       `json:"res"`
+	}
+	result := addResponse{User: user, Res: res}
+	fmt.Println(result)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": result})
+}
+
+func (impl TennisMomentControllerImpl) Auth(c *gin.Context) {
+	auth := c.Request.Header.Get("Authorization")
+	claims, error := middleware.ParseToken(auth)
+	type authResponse struct {
+		LoginName string `json:"loginName"`
+		Password  string `json:"password"`
+	}
+	res := authResponse{LoginName: claims.LoginName, Password: claims.Password}
+	fmt.Println(claims.Password)
+	if error != nil {
+		c.JSON(401, map[string]interface{}{"code": 0, "msg": error, "count": 0, "data": nil})
+	} else {
+		c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+	}
 }
 
 func (impl TennisMomentControllerImpl) SignIn(c *gin.Context) {
 
 	type SignInRequest struct {
-		Id int64 `json:"id"`
+		LoginName string `json:"loginName"`
+		Password  string `json:"password"`
 	}
 
 	var req SignInRequest
@@ -129,8 +155,29 @@ func (impl TennisMomentControllerImpl) SignIn(c *gin.Context) {
 		// 处理错误
 	}
 
-	user := impl.dao.SignIn(c, req.Id)
+	user, error := impl.dao.SignIn(c, req.LoginName, req.Password)
+	if error != nil {
+		c.JSON(401, map[string]interface{}{"code": 0, "msg": error, "count": 0, "data": nil})
+	}
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": user})
+
+}
+
+func (impl TennisMomentControllerImpl) ResetPassword(c *gin.Context) {
+
+	type resetRequest struct {
+		LoginName string `json:"loginName"`
+		Password  string `json:"password"`
+	}
+
+	var req resetRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+
+	res := impl.dao.ResetPassword(c, req.LoginName, req.Password)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
 
 }
 
@@ -146,7 +193,7 @@ func (impl TennisMomentControllerImpl) SearchPlayer(c *gin.Context) {
 		// 处理错误
 	}
 
-	player := impl.dao.GetPlayerInfo(c, req.Id)
+	player, _ := impl.dao.GetPlayerInfo(c, req.Id)
 	if player.LoginName != "" {
 		c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": player})
 	}
@@ -177,7 +224,7 @@ func (impl TennisMomentControllerImpl) GetPlayerInfo(c *gin.Context) {
 		// 处理错误
 	}
 
-	player := impl.dao.GetPlayerInfo(c, req.Id)
+	player, _ := impl.dao.GetPlayerInfo(c, req.Id)
 	if player.LoginName == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get player info"})
 	} else {
@@ -256,6 +303,19 @@ func (impl TennisMomentControllerImpl) SearchFriend(c *gin.Context) {
 
 	res := impl.dao.SearchFriend(c, relationship)
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) AddSchedule(c *gin.Context) {
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	schedule := model.Schedule{}
+	json.Unmarshal(bytes, &schedule)
+	if err != nil {
+		panic(err)
+	}
+	result := impl.dao.AddSchedule(c, schedule)
+
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": result})
 }
 
 func (impl TennisMomentControllerImpl) SearchStats(c *gin.Context) {

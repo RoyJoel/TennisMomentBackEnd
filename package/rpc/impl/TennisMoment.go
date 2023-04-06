@@ -100,27 +100,27 @@ func (impl *TennisMomentRPCImpl) UpdatePlayer(ctx context.Context, request *prot
 
 func (impl *TennisMomentRPCImpl) SearchPlayer(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
 	id := request.GetId()
-	Players := impl.dao.GetPlayerInfo(ctx, id)
+	Players, _ := impl.dao.GetPlayerInfo(ctx, id)
 	infos, _ := json.Marshal(Players)
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(infos)}, nil
 }
 
 func (impl *TennisMomentRPCImpl) GetPlayerInfo(ctx context.Context, req *proto.PlayerInfoRequest) (resp *proto.PlayerInfoResponse, err error) {
 	id := req.GetId()
-	Players := impl.dao.GetPlayerInfo(ctx, id)
+	Players, _ := impl.dao.GetPlayerInfo(ctx, id)
 	infos, _ := json.Marshal(Players)
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(infos)}, nil
 }
 
 func (impl *TennisMomentRPCImpl) AddFriend(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
 	id := request.GetId()
-	Players := impl.dao.GetPlayerInfo(ctx, id)
+	Players, _ := impl.dao.GetPlayerInfo(ctx, id)
 	infos, _ := json.Marshal(Players)
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(infos)}, nil
 }
 func (impl *TennisMomentRPCImpl) DeleteFriend(ctx context.Context, request *proto.PlayerInfoRequest) (*proto.PlayerInfoResponse, error) {
 	id := request.GetId()
-	Players := impl.dao.GetPlayerInfo(ctx, id)
+	Players, _ := impl.dao.GetPlayerInfo(ctx, id)
 	infos, _ := json.Marshal(Players)
 	return &proto.PlayerInfoResponse{Code: 0, Msg: "", Count: 1, Data: string(infos)}, nil
 }

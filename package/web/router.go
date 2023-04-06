@@ -4,7 +4,6 @@ import (
 	"github.com/RoyJoel/TennisMomentBackEnd/package/config"
 	"github.com/RoyJoel/TennisMomentBackEnd/package/web/controller"
 	"github.com/RoyJoel/TennisMomentBackEnd/package/web/interceptor"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,13 +13,24 @@ func RunHttp() {
 	r.Use(interceptor.HttpInterceptor())
 	//解决跨域
 	r.Use(config.CorsConfig())
+
+	authInfo := r.Group("/")
+	{
+		authInfo.GET("auth", controller.NewTennisMomentControllerImpl().Auth)
+	}
+
 	//路由组
 	userInfo := r.Group("/user")
 	{
 		userInfo.POST("/signIn", controller.NewTennisMomentControllerImpl().SignIn)
 		userInfo.POST("/signUp", controller.NewTennisMomentControllerImpl().SignUp)
+		userInfo.POST("/resetPassword", controller.NewTennisMomentControllerImpl().ResetPassword)
 	}
 
+	scheduleInfo := r.Group("/schedule")
+	{
+		scheduleInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddSchedule)
+	}
 	playerInfo := r.Group("/player")
 	{
 		playerInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdatePlayer)

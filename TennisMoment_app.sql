@@ -98,6 +98,14 @@ CREATE TABLE `Club`
 	`address`        VARCHAR(255) NOT NULL
 );
 
+CREATE TABLE `Schedule`
+(
+	`date`       DOUBLE NOT NULL,
+	`place`      VARCHAR(255) NOT NULL,
+	`player1_id` INT(11) NOT NULL,
+	`player2_id` INT(11) NOT NULL
+);
+
 CREATE TABLE `Event`
 (
 	`id` BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,

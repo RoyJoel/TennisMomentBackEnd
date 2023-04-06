@@ -7,6 +7,7 @@ import (
 type Player struct {
 	Id            int64   `json:"id"`
 	LoginName     string  `json:"loginName"`
+	Password      string  `json:"password"`
 	Name          string  `json:"name"`
 	Icon          string  `json:"icon"`
 	Sex           string  `json:"sex"`
@@ -29,6 +30,7 @@ func (player Player) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"id":            player.Id,
 		"loginName":     player.LoginName,
+		"password":      player.Password,
 		"name":          player.Name,
 		"icon":          player.Icon,
 		"sex":           player.Sex,
@@ -56,6 +58,7 @@ func (player Player) UnmarshalBinary(data []byte) error {
 type PlayerResponse struct {
 	Id          int64   `json:"id"`
 	LoginName   string  `json:"loginName"`
+	Password    string  `json:"password"`
 	Name        string  `json:"name"`
 	Icon        string  `json:"icon"`
 	Sex         string  `json:"sex"`
@@ -74,6 +77,7 @@ func (playerResponse PlayerResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"id":          playerResponse.Id,
 		"loginName":   playerResponse.LoginName,
+		"password":    playerResponse.Password,
 		"name":        playerResponse.Name,
 		"icon":        playerResponse.Icon,
 		"sex":         playerResponse.Sex,
