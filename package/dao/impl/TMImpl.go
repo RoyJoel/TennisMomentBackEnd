@@ -54,18 +54,20 @@ func (impl *TennisMomentDaoImpl) AddGame(ctx context.Context, game *model.Game) 
 
 func (impl *TennisMomentDaoImpl) UpdateGameAndStats(ctx context.Context, gameResponse model.GameResponse) model.GameResponse {
 	game := model.Game{Id: gameResponse.Id, Place: gameResponse.Place, Surface: gameResponse.Surface, SetNum: gameResponse.SetNum, GameNum: gameResponse.GameNum, Round: gameResponse.Round, IsGoldenGoal: gameResponse.IsGoldenGoal, IsPlayer1Serving: gameResponse.IsPlayer1Serving, IsPlayer1Left: gameResponse.IsPlayer1Left, IsChangePosition: gameResponse.IsChangePosition, StartDate: gameResponse.StartDate, EndDate: gameResponse.EndDate, Player1Id: gameResponse.Player1.Id, Player1StatsId: gameResponse.Player1Stats.Id, Player2Id: gameResponse.Player2.Id, Player2StatsId: gameResponse.Player2Stats.Id, IsPlayer1FirstServe: gameResponse.IsPlayer1FirstServe, IsPlayer2FirstServe: gameResponse.IsPlayer2FirstServe, Result: gameResponse.Result}
-
-	impl.db.Where("id = ?", game.Id).Save(game)
-	impl.UpdateStats(ctx, gameResponse.Player1Stats, gameResponse.Player1.CareerStats.Id)
-	impl.UpdateStats(ctx, gameResponse.Player2Stats, gameResponse.Player2.CareerStats.Id)
-	fmt.Println(gameResponse)
+	var Game model.Game
+	impl.db.Where("id = ?", game.Id).First(&Game)
+	if !Game.Equals(game) {
+		impl.db.Where("id = ?", game.Id).Save(&game)
+		impl.UpdateStats(ctx, gameResponse.Player1Stats, gameResponse.Player1.CareerStats.Id)
+		impl.UpdateStats(ctx, gameResponse.Player2Stats, gameResponse.Player2.CareerStats.Id)
+	}
 	return gameResponse
 }
 
 func (impl *TennisMomentDaoImpl) GetRecentGames(ctx context.Context, id int64, limit int, isCompleted bool) []model.GameResponse {
 	var games []model.Game
 	var gameResponses []model.GameResponse
-	impl.db.Order("start_date desc").Limit(limit).Find(&games, "player1_id = ? OR player2_id = ?", id, id)
+	impl.db.Order("end_date desc").Limit(limit).Find(&games, "player1_id = ? OR player2_id = ?", id, id)
 	for _, game := range games {
 		if !isCompleted {
 			if game.EndDate >= float64(time.Now().UnixNano()) || game.EndDate == 0 {
@@ -102,12 +104,14 @@ func (impl *TennisMomentDaoImpl) GetHistoryGames(ctx context.Context, player1Id,
 	}
 
 	for _, game := range game1 {
-		player1, _ := impl.GetPlayerInfo(ctx, game.Player1Id)
-		stats1 := impl.GetStatsInfo(ctx, game.Player1StatsId)
-		player2, _ := impl.GetPlayerInfo(ctx, game.Player2Id)
-		stats2 := impl.GetStatsInfo(ctx, game.Player2StatsId)
-		gameResponse := model.GameResponse{Id: game.Id, Place: game.Place, Surface: game.Surface, SetNum: game.SetNum, GameNum: game.GameNum, Round: game.Round, IsGoldenGoal: game.IsGoldenGoal, IsPlayer1Serving: game.IsPlayer1Serving, IsPlayer1Left: game.IsPlayer1Left, IsChangePosition: game.IsChangePosition, StartDate: game.StartDate, EndDate: game.EndDate, Player1: *player1, Player1Stats: stats1, Player2: *player2, Player2Stats: stats2, IsPlayer1FirstServe: game.IsPlayer1FirstServe, IsPlayer2FirstServe: game.IsPlayer2FirstServe, Result: game.Result}
-		gameResponses = append(gameResponses, gameResponse)
+		if game.EndDate < float64(time.Now().UnixNano()) && game.EndDate != 0 {
+			player1, _ := impl.GetPlayerInfo(ctx, game.Player1Id)
+			stats1 := impl.GetStatsInfo(ctx, game.Player1StatsId)
+			player2, _ := impl.GetPlayerInfo(ctx, game.Player2Id)
+			stats2 := impl.GetStatsInfo(ctx, game.Player2StatsId)
+			gameResponse := model.GameResponse{Id: game.Id, Place: game.Place, Surface: game.Surface, SetNum: game.SetNum, GameNum: game.GameNum, Round: game.Round, IsGoldenGoal: game.IsGoldenGoal, IsPlayer1Serving: game.IsPlayer1Serving, IsPlayer1Left: game.IsPlayer1Left, IsChangePosition: game.IsChangePosition, StartDate: game.StartDate, EndDate: game.EndDate, Player1: *player1, Player1Stats: stats1, Player2: *player2, Player2Stats: stats2, IsPlayer1FirstServe: game.IsPlayer1FirstServe, IsPlayer2FirstServe: game.IsPlayer2FirstServe, Result: game.Result}
+			gameResponses = append(gameResponses, gameResponse)
+		}
 	}
 
 	return gameResponses
@@ -148,42 +152,114 @@ func (impl *TennisMomentDaoImpl) GetAllGames(ctx context.Context, playerId int64
 	return gameResponses
 }
 
+func (impl *TennisMomentDaoImpl) GetAllHistoryGames(ctx context.Context, playerId int64, isCompleted bool) []model.GameResponse {
+	var game1 []model.Game
+	var game2 []model.Game
+	var gameResponses []model.GameResponse
+	impl.db.Find(&game1, "player1_id = ?", playerId)
+	impl.db.Find(&game2, "player2_id = ?", playerId)
+	for _, game := range game2 {
+		if game.EndDate == 0 {
+			game1 = append(game1, game)
+		}
+	}
+
+	for _, game := range game1 {
+		if !isCompleted {
+			if game.EndDate >= float64(time.Now().UnixNano()) || game.EndDate == 0 {
+				player1, _ := impl.GetPlayerInfo(ctx, game.Player1Id)
+				stats1 := impl.GetStatsInfo(ctx, game.Player1StatsId)
+				player2, _ := impl.GetPlayerInfo(ctx, game.Player2Id)
+				stats2 := impl.GetStatsInfo(ctx, game.Player2StatsId)
+				gameResponse := model.GameResponse{Id: game.Id, Place: game.Place, Surface: game.Surface, SetNum: game.SetNum, GameNum: game.GameNum, Round: game.Round, IsGoldenGoal: game.IsGoldenGoal, IsPlayer1Serving: game.IsPlayer1Serving, IsPlayer1Left: game.IsPlayer1Left, IsChangePosition: game.IsChangePosition, StartDate: game.StartDate, EndDate: game.EndDate, Player1: *player1, Player1Stats: stats1, Player2: *player2, Player2Stats: stats2, IsPlayer1FirstServe: game.IsPlayer1FirstServe, IsPlayer2FirstServe: game.IsPlayer2FirstServe, Result: game.Result}
+				gameResponses = append(gameResponses, gameResponse)
+			}
+		} else {
+			if game.EndDate < float64(time.Now().UnixNano()) && game.EndDate != 0 {
+				player1, _ := impl.GetPlayerInfo(ctx, game.Player1Id)
+				stats1 := impl.GetStatsInfo(ctx, game.Player1StatsId)
+				player2, _ := impl.GetPlayerInfo(ctx, game.Player2Id)
+				stats2 := impl.GetStatsInfo(ctx, game.Player2StatsId)
+				gameResponse := model.GameResponse{Id: game.Id, Place: game.Place, Surface: game.Surface, SetNum: game.SetNum, GameNum: game.GameNum, Round: game.Round, IsGoldenGoal: game.IsGoldenGoal, IsPlayer1Serving: game.IsPlayer1Serving, IsPlayer1Left: game.IsPlayer1Left, IsChangePosition: game.IsChangePosition, StartDate: game.StartDate, EndDate: game.EndDate, Player1: *player1, Player1Stats: stats1, Player2: *player2, Player2Stats: stats2, IsPlayer1FirstServe: game.IsPlayer1FirstServe, IsPlayer2FirstServe: game.IsPlayer2FirstServe, Result: game.Result}
+				gameResponses = append(gameResponses, gameResponse)
+			}
+		}
+	}
+
+	return gameResponses
+}
+
 func (impl *TennisMomentDaoImpl) AddPlayer(ctx context.Context, Player model.Player) (model.PlayerResponse, bool) {
 
-	res := impl.SearchPlayer(ctx, Player.Id)
+	res := impl.SearchPlayer(ctx, Player.LoginName)
 	if !res {
+		newPlayer := model.Player{}
+		newPlayer = model.Player{LoginName: Player.LoginName, Password: Player.Password, Name: Player.Name, Icon: Player.Icon, Sex: Player.Sex, Age: Player.Age, YearsPlayed: Player.YearsPlayed, Height: Player.Height, Width: Player.Width, Grip: Player.Grip, Backhand: Player.Backhand, Points: Player.Points, IsAdult: Player.IsAdult}
 		Stats := model.Stats{}
 		impl.db.Create(&Stats)
-		PlayerStats := model.PlayerStats{PlayerId: Player.Id, StatsId: Stats.Id}
+		PlayerStats := model.PlayerStats{PlayerId: newPlayer.Id, StatsId: Stats.Id}
 		impl.db.Create(&PlayerStats)
-		Player.CareerStatsId = Stats.Id
-		impl.db.Create(&Player)
-		return model.PlayerResponse{Id: Player.Id, LoginName: Player.LoginName, Name: Player.Name, Icon: Player.Icon, Sex: Player.Sex, Age: Player.Age, YearsPlayed: Player.YearsPlayed, Height: Player.Height, Width: Player.Width, Grip: Player.Grip, Backhand: Player.Backhand, Points: Player.Points, IsAdult: Player.IsAdult, CareerStats: Stats}, res
+		newPlayer.CareerStatsId = Stats.Id
+		impl.db.Create(&newPlayer)
+		return model.PlayerResponse{Id: newPlayer.Id, LoginName: newPlayer.LoginName, Password: newPlayer.Password, Name: newPlayer.Name, Icon: newPlayer.Icon, Sex: newPlayer.Sex, Age: newPlayer.Age, YearsPlayed: newPlayer.YearsPlayed, Height: newPlayer.Height, Width: newPlayer.Width, Grip: newPlayer.Grip, Backhand: newPlayer.Backhand, Points: newPlayer.Points, IsAdult: newPlayer.IsAdult, CareerStats: Stats}, res
 	} else {
 		var player model.Player
 		impl.db.Where("id = ?", Player.Id).First(&player)
 		stats := impl.GetStatsInfo(ctx, player.CareerStatsId)
-		return model.PlayerResponse{Id: player.Id, LoginName: player.LoginName, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: stats}, res
+		return model.PlayerResponse{Id: player.Id, LoginName: player.LoginName, Password: Player.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: stats}, res
 	}
 }
 
 func (impl *TennisMomentDaoImpl) SignUp(ctx context.Context, user model.User) (model.User, bool) {
-	playerInfo := model.Player{Id: user.Id, LoginName: user.LoginName, Name: user.Name, Icon: user.Icon, Sex: user.Sex, Age: user.Age, YearsPlayed: user.YearsPlayed, Height: user.Height, Width: user.Width, Grip: user.Grip, Backhand: user.Backhand, Points: user.Points, IsAdult: user.IsAdult, CareerStatsId: user.CareerStats.Id}
+	playerInfo := model.Player{Id: user.Id, LoginName: user.LoginName, Password: user.Password, Name: user.Name, Icon: user.Icon, Sex: user.Sex, Age: user.Age, YearsPlayed: user.YearsPlayed, Height: user.Height, Width: user.Width, Grip: user.Grip, Backhand: user.Backhand, Points: user.Points, IsAdult: user.IsAdult, CareerStatsId: user.CareerStats.Id}
 	player, res := impl.AddPlayer(ctx, playerInfo)
-	relationship := model.Relationship{Player1Id: player.Id, Player2Id: player.Id}
-	impl.db.Create(relationship)
 	friends := []model.PlayerResponse{}
-	friends = append(friends, player)
+	if res == false {
+		relationship := model.Relationship{Player1Id: player.Id, Player2Id: player.Id}
+		impl.db.Create(relationship)
+		friends = append(friends, player)
+	} else {
+		friends = user.Friends
+	}
 	// 生成 token string
 	tokenStr, _ := middleware.GenerateToken(user.LoginName, user.Password)
-	user = model.User{Id: player.Id, LoginName: player.LoginName, Password: user.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: player.CareerStats, Friends: friends, AllGames: make([]model.GameResponse, 0), AllTourLevelGames: make([]model.GameResponse, 0), AllClubs: make([]model.ClubResponse, 0), AllSchedules: make([]model.ScheduleResponse, 0), AllEvents: make([]model.EventResponse, 0), Token: tokenStr}
+	user = model.User{Id: player.Id, LoginName: player.LoginName, Password: user.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: player.CareerStats, Friends: friends, AllHistoryGames: make([]model.GameResponse, 0), AllUnfinishedGames: make([]model.GameResponse, 0), AllClubs: utils.IntMatrix{}, AllSchedules: make([]model.ScheduleResponse, 0), AllEvents: utils.IntMatrix{}, Token: tokenStr}
 	return user, res
 }
+
+func (impl *TennisMomentDaoImpl) UpdateUser(ctx context.Context, user model.User) model.User {
+	Player := model.PlayerResponse{Id: user.Id, LoginName: user.LoginName, Password: user.Password, Name: user.Name, Icon: user.Icon, Sex: user.Sex, Age: user.Age, YearsPlayed: user.YearsPlayed, Height: user.Height, Width: user.Width, Grip: user.Grip, Backhand: user.Backhand, Points: user.Points, IsAdult: user.IsAdult, CareerStats: user.CareerStats}
+	playerResponse := impl.UpdatePlayer(ctx, Player)
+	for _, friend := range user.Friends {
+		impl.UpdateFriend(ctx, model.Relationship{Player1Id: user.Id, Player2Id: friend.Id})
+	}
+	user.Friends = impl.UpdateFriendDB(ctx, user.Id, user.Friends)
+	for _, club := range user.AllClubs {
+		impl.UpdateClub(ctx, model.ClubMember{ClubId: club, MemberId: user.Id})
+	}
+	user.AllClubs = impl.UpdateClubDB(ctx, user.Id, user.AllClubs)
+	for _, game := range user.AllHistoryGames {
+		impl.UpdateGameAndStats(ctx, game)
+	}
+	for _, game := range user.AllUnfinishedGames {
+		impl.UpdateGameAndStats(ctx, game)
+	}
+	for _, event := range user.AllEvents {
+		impl.UpdateEvent(ctx, model.EventPlayer{EventId: event, PlayerId: user.Id})
+	}
+	for _, schedule := range user.AllSchedules {
+		impl.UpdateSchedule(ctx, model.Schedule{Id: schedule.Id, StartDate: schedule.StartDate, Place: schedule.Place, Player1Id: user.Id, Player2Id: schedule.Opponent.Id})
+	}
+	user.AllSchedules = impl.UpdateScheduleDB(ctx, user.Id, user.AllSchedules)
+	return model.User{Id: playerResponse.Id, LoginName: playerResponse.LoginName, Password: playerResponse.Password, Name: playerResponse.Name, Icon: playerResponse.Icon, Sex: playerResponse.Sex, Age: playerResponse.Age, YearsPlayed: playerResponse.YearsPlayed, Height: playerResponse.Height, Width: playerResponse.Width, Grip: playerResponse.Grip, Backhand: playerResponse.Backhand, Points: playerResponse.Points, IsAdult: playerResponse.IsAdult, CareerStats: playerResponse.CareerStats, Friends: user.Friends, AllClubs: user.AllClubs, AllHistoryGames: user.AllHistoryGames, AllUnfinishedGames: user.AllUnfinishedGames, AllEvents: user.AllEvents, AllSchedules: user.AllSchedules, Token: user.Token}
+}
+
 func (impl *TennisMomentDaoImpl) SignIn(ctx context.Context, userLoginName string, userPassword string) (*model.User, error) {
 	player, _ := impl.GetPlayerInfoByLoginNameAndPassword(ctx, userLoginName, userPassword)
 	if player != nil {
 		friends := impl.GetAllFriends(ctx, player.Id)
-		games := impl.GetAllGames(ctx, player.Id)
+		games := impl.GetAllHistoryGames(ctx, player.Id, true)
+		unfinishedGames := impl.GetAllHistoryGames(ctx, player.Id, false)
 		clubs := impl.GetMyClubs(ctx, player.Id)
 		schedules := impl.GetSchedules(ctx, player.Id)
 		// 生成 token string
@@ -191,7 +267,7 @@ func (impl *TennisMomentDaoImpl) SignIn(ctx context.Context, userLoginName strin
 		if error != nil {
 			return nil, error
 		} else {
-			user := model.User{Id: player.Id, LoginName: player.LoginName, Password: player.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: player.CareerStats, Friends: friends, AllGames: games, AllTourLevelGames: make([]model.GameResponse, 0), AllClubs: clubs, AllEvents: make([]model.EventResponse, 0), AllSchedules: schedules, Token: tokenStr}
+			user := model.User{Id: player.Id, LoginName: player.LoginName, Password: player.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: player.CareerStats, Friends: friends, AllUnfinishedGames: unfinishedGames, AllHistoryGames: games, AllClubs: clubs, AllEvents: utils.IntMatrix{}, AllSchedules: schedules, Token: tokenStr}
 			return &user, nil
 		}
 	} else {
@@ -201,28 +277,27 @@ func (impl *TennisMomentDaoImpl) SignIn(ctx context.Context, userLoginName strin
 
 func (impl *TennisMomentDaoImpl) ResetPassword(ctx context.Context, userLoginName string, userPassword string) bool {
 	var Player model.Player
-
 	impl.db.Where("login_name = ?", userLoginName).First(&Player)
 	if Player.LoginName == userLoginName {
 		player := model.Player{Password: userPassword}
-		impl.db.Where("login_name = ?", Player.LoginName).Updates(player)
+		impl.db.Where("login_name = ?", Player.LoginName).Updates(&player)
 		return true
 	}
 	return false
 }
 
 func (impl *TennisMomentDaoImpl) UpdatePlayer(ctx context.Context, player model.PlayerResponse) model.PlayerResponse {
-	Player := model.Player{Id: player.Id, LoginName: player.LoginName, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStatsId: player.CareerStats.Id}
-	impl.db.Where("id = ?", player.Id).Updates(Player)
+	Player := model.Player{Id: player.Id, LoginName: player.LoginName, Password: player.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStatsId: player.CareerStats.Id}
+	impl.db.Where("id = ?", player.Id).Updates(&Player)
 	impl.db.First(&Player, "id = ?", player.Id)
 	stats := impl.UpdateCareerStats(ctx, player.CareerStats)
-	return model.PlayerResponse{Id: Player.Id, LoginName: Player.LoginName, Name: Player.Name, Icon: Player.Icon, Sex: Player.Sex, Age: Player.Age, YearsPlayed: Player.YearsPlayed, Height: Player.Height, Width: Player.Width, Grip: Player.Grip, Backhand: Player.Backhand, Points: Player.Points, IsAdult: Player.IsAdult, CareerStats: stats}
+	return model.PlayerResponse{Id: Player.Id, LoginName: Player.LoginName, Password: Player.Password, Name: Player.Name, Icon: Player.Icon, Sex: Player.Sex, Age: Player.Age, YearsPlayed: Player.YearsPlayed, Height: Player.Height, Width: Player.Width, Grip: Player.Grip, Backhand: Player.Backhand, Points: Player.Points, IsAdult: Player.IsAdult, CareerStats: stats}
 }
 
-func (impl *TennisMomentDaoImpl) SearchPlayer(ctx context.Context, id int64) bool {
+func (impl *TennisMomentDaoImpl) SearchPlayer(ctx context.Context, loginName string) bool {
 	var Player model.Player
-	impl.db.Where("id = ?", id).First(&Player)
-	return Player.Id == id && id != 0
+	impl.db.Where("login_name = ?", loginName).First(&Player)
+	return Player.LoginName == loginName
 }
 
 func (impl *TennisMomentDaoImpl) GetPlayerInfo(ctx context.Context, id int64) (*model.PlayerResponse, error) {
@@ -230,7 +305,17 @@ func (impl *TennisMomentDaoImpl) GetPlayerInfo(ctx context.Context, id int64) (*
 	impl.db.Where("id = ?", id).First(&Player)
 	if Player.Id == id {
 		stats := impl.GetStatsInfo(ctx, Player.CareerStatsId)
-		return &model.PlayerResponse{Id: Player.Id, LoginName: Player.LoginName, Name: Player.Name, Icon: Player.Icon, Sex: Player.Sex, Age: Player.Age, YearsPlayed: Player.YearsPlayed, Height: Player.Height, Width: Player.Width, Grip: Player.Grip, Backhand: Player.Backhand, Points: Player.Points, IsAdult: Player.IsAdult, CareerStats: stats}, nil
+		return &model.PlayerResponse{Id: Player.Id, LoginName: Player.LoginName, Password: Player.Password, Name: Player.Name, Icon: Player.Icon, Sex: Player.Sex, Age: Player.Age, YearsPlayed: Player.YearsPlayed, Height: Player.Height, Width: Player.Width, Grip: Player.Grip, Backhand: Player.Backhand, Points: Player.Points, IsAdult: Player.IsAdult, CareerStats: stats}, nil
+	}
+	return nil, errors.New("no such player")
+}
+
+func (impl *TennisMomentDaoImpl) GetPlayerInfoByLoginName(ctx context.Context, loginName string) (*model.PlayerResponse, error) {
+	var Player model.Player
+	impl.db.Where("login_name = ?", loginName).First(&Player)
+	if Player.LoginName == loginName {
+		stats := impl.GetStatsInfo(ctx, Player.CareerStatsId)
+		return &model.PlayerResponse{Id: Player.Id, LoginName: Player.LoginName, Password: Player.Password, Name: Player.Name, Icon: Player.Icon, Sex: Player.Sex, Age: Player.Age, YearsPlayed: Player.YearsPlayed, Height: Player.Height, Width: Player.Width, Grip: Player.Grip, Backhand: Player.Backhand, Points: Player.Points, IsAdult: Player.IsAdult, CareerStats: stats}, nil
 	}
 	return nil, errors.New("no such player")
 }
@@ -282,7 +367,7 @@ func (impl *TennisMomentDaoImpl) GetAllFriends(ctx context.Context, id int64) []
 
 	for _, friend := range friends {
 		stats := impl.GetStatsInfo(ctx, friend.CareerStatsId)
-		friendResponse := model.PlayerResponse{Id: friend.Id, LoginName: friend.LoginName, Name: friend.Name, Icon: friend.Icon, Sex: friend.Sex, Age: friend.Age, YearsPlayed: friend.YearsPlayed, Height: friend.Height, Width: friend.Width, Grip: friend.Grip, Backhand: friend.Backhand, Points: friend.Points, IsAdult: friend.IsAdult, CareerStats: stats}
+		friendResponse := model.PlayerResponse{Id: friend.Id, LoginName: friend.LoginName, Password: friend.Password, Name: friend.Name, Icon: friend.Icon, Sex: friend.Sex, Age: friend.Age, YearsPlayed: friend.YearsPlayed, Height: friend.Height, Width: friend.Width, Grip: friend.Grip, Backhand: friend.Backhand, Points: friend.Points, IsAdult: friend.IsAdult, CareerStats: stats}
 		friendResponses = append(friendResponses, friendResponse)
 	}
 	return friendResponses
@@ -296,8 +381,49 @@ func (impl *TennisMomentDaoImpl) AddFriend(ctx context.Context, relationship mod
 	return impl.GetAllFriends(ctx, relationship.Player1Id)
 }
 
+func (impl *TennisMomentDaoImpl) UpdateFriend(ctx context.Context, relationship model.Relationship) []model.PlayerResponse {
+	res1 := impl.SearchFriend(ctx, model.Relationship{Player1Id: relationship.Player2Id, Player2Id: relationship.Player1Id})
+	res2 := impl.SearchFriend(ctx, relationship)
+	if !res1 && !res2 {
+		impl.db.Create(&relationship)
+	}
+
+	return impl.GetAllFriends(ctx, relationship.Player1Id)
+}
+
+func (impl *TennisMomentDaoImpl) UpdateFriendDB(ctx context.Context, userId int64, friends []model.PlayerResponse) []model.PlayerResponse {
+	relationships := make([]model.Relationship, 0)
+	for _, friend := range friends {
+		relationship := model.Relationship{Player1Id: userId, Player2Id: friend.Id}
+		relationships = append(relationships, relationship)
+	}
+	var results []model.Relationship
+
+	m := make(map[model.Relationship]bool)
+	impl.db.Where("player1_id = ? OR player2_id = ?", userId, userId).Find(&results)
+	for _, relat := range relationships {
+		rerat := model.Relationship{Player1Id: relat.Player2Id, Player2Id: relat.Player1Id}
+		m[relat] = true
+		m[rerat] = true
+	}
+	for _, res := range results {
+		rerat := model.Relationship{Player1Id: res.Player2Id, Player2Id: res.Player1Id}
+		if !m[res] && !m[rerat] {
+			impl.db.Where("player1_id = ? AND player2_id = ?", res.Player1Id, res.Player2Id).Delete(&res)
+			impl.db.Where("player1_id = ? AND player2_id = ?", rerat.Player1Id, rerat.Player2Id).Delete(&rerat)
+		}
+	}
+	return impl.GetAllFriends(ctx, userId)
+}
+
 func (impl *TennisMomentDaoImpl) AddSchedule(ctx context.Context, schedule model.Schedule) []model.ScheduleResponse {
-	impl.db.Create(&schedule)
+	newSchedule := model.Schedule{}
+	impl.db.Create(&newSchedule)
+	newSchedule.Place = schedule.Place
+	newSchedule.StartDate = schedule.StartDate
+	newSchedule.Player1Id = schedule.Player1Id
+	newSchedule.Player2Id = schedule.Player2Id
+	impl.db.Save(&newSchedule)
 	return impl.GetSchedules(ctx, schedule.Player1Id)
 }
 
@@ -330,7 +456,7 @@ func (impl *TennisMomentDaoImpl) GetStatsInfo(ctx context.Context, statsId int64
 }
 
 func (impl *TennisMomentDaoImpl) UpdateStats(ctx context.Context, Stats model.Stats, careerStatsId int64) model.Stats {
-	impl.db.Save(Stats)
+	impl.db.Save(&Stats)
 	careerStats := model.Stats{}
 	impl.db.First(&careerStats, "id", careerStatsId)
 	careerStats.Aces += Stats.Aces
@@ -365,18 +491,17 @@ func (impl *TennisMomentDaoImpl) UpdateStats(ctx context.Context, Stats model.St
 }
 
 func (impl *TennisMomentDaoImpl) UpdateCareerStats(ctx context.Context, careerStats model.Stats) model.Stats {
-	impl.db.Where("id = ?", careerStats.Id).Updates(careerStats)
+	impl.db.Where("id = ?", careerStats.Id).Updates(&careerStats)
 	return careerStats
 }
 
-func (impl *TennisMomentDaoImpl) GetMyClubs(ctx context.Context, playerId int64) []model.ClubResponse {
+func (impl *TennisMomentDaoImpl) GetMyClubs(ctx context.Context, playerId int64) utils.IntMatrix {
 	clubMembers := make([]model.ClubMember, 0)
-	clubResponses := make([]model.ClubResponse, 0)
+	clubResponses := utils.IntMatrix{}
 	impl.db.Where("member_id = ?", playerId).Find(&clubMembers)
 
 	for _, ClubMember := range clubMembers {
-		clubResponse := impl.GetClubInfo(ctx, ClubMember.ClubId)
-		clubResponses = append(clubResponses, clubResponse)
+		clubResponses = append(clubResponses, ClubMember.ClubId)
 	}
 	return clubResponses
 }
@@ -389,6 +514,35 @@ func (impl *TennisMomentDaoImpl) GetClubInfo(ctx context.Context, clubId int64) 
 	clubResponse := model.ClubResponse{Id: club.Id, Icon: club.Icon, Name: club.Name, Intro: club.Intro, Owner: *owner, Address: club.Address, Events: events}
 
 	return clubResponse
+}
+
+func (impl *TennisMomentDaoImpl) UpdateClub(ctx context.Context, ClubMember model.ClubMember) {
+	clubMember := model.ClubMember{}
+	impl.db.Where("club_id = ? And member_id = ?", ClubMember.ClubId, ClubMember.MemberId).First(&clubMember)
+	if clubMember.ClubId != ClubMember.ClubId || clubMember.MemberId != ClubMember.MemberId {
+		impl.db.Create(ClubMember)
+	}
+	return
+}
+
+func (impl *TennisMomentDaoImpl) UpdateClubDB(ctx context.Context, userId int64, clubs utils.IntMatrix) utils.IntMatrix {
+
+	var results utils.IntMatrix
+
+	m := make(map[int64]bool)
+	impl.db.Where("member_id = ?", userId).Find(&results)
+
+	for _, item := range clubs {
+		m[item] = true
+	}
+
+	for _, item := range results {
+		if !m[item] {
+			club := model.ClubMember{ClubId: item, MemberId: userId}
+			impl.db.Where("club_id = ?", item).Delete(&club)
+		}
+	}
+	return impl.GetMyClubs(ctx, userId)
 }
 
 func (impl *TennisMomentDaoImpl) GetAllEventsForClub(ctx context.Context, clubId int64) []model.EventResponse {
@@ -440,7 +594,7 @@ func (impl *TennisMomentDaoImpl) GetSchedules(ctx context.Context, playerId int6
 	for _, schdule := range schedules {
 		if schdule.Player1Id == playerId {
 			opponent, _ := impl.GetPlayerInfo(ctx, schdule.Player2Id)
-			scheduleResponse := model.ScheduleResponse{Place: schdule.Place, StartDate: schdule.StartDate, Opponent: *opponent}
+			scheduleResponse := model.ScheduleResponse{Id: schdule.Id, Place: schdule.Place, StartDate: schdule.StartDate, Opponent: *opponent}
 			scheduleResponses = append(scheduleResponses, scheduleResponse)
 		} else {
 			opponent, _ := impl.GetPlayerInfo(ctx, schdule.Player1Id)
@@ -449,4 +603,41 @@ func (impl *TennisMomentDaoImpl) GetSchedules(ctx context.Context, playerId int6
 		}
 	}
 	return scheduleResponses
+}
+
+func (impl *TennisMomentDaoImpl) UpdateEvent(ctx context.Context, EventPlayer model.EventPlayer) {
+	eventPlayer := model.EventPlayer{}
+	impl.db.Where("event_id = ? And player_id = ?", EventPlayer.EventId, EventPlayer.PlayerId).First(&eventPlayer)
+	if eventPlayer.EventId != EventPlayer.EventId || eventPlayer.PlayerId != EventPlayer.PlayerId {
+		impl.db.Create(EventPlayer)
+	}
+}
+
+func (impl *TennisMomentDaoImpl) UpdateSchedule(ctx context.Context, Schedule model.Schedule) {
+	schedule := model.Schedule{}
+	impl.db.Where("id = ?", Schedule.Id).First(&schedule)
+	if schedule.Id == Schedule.Id {
+		impl.db.Save(&Schedule)
+	} else {
+		impl.db.Create(&Schedule)
+	}
+}
+
+func (impl *TennisMomentDaoImpl) UpdateScheduleDB(ctx context.Context, userId int64, schedules []model.ScheduleResponse) []model.ScheduleResponse {
+
+	var results []model.Schedule
+
+	m := make(map[int64]bool)
+	impl.db.Where("player1_id = ? OR player2_id = ?", userId, userId).Find(&results)
+	fmt.Println(len(schedules))
+	fmt.Println(len(results))
+	for _, relat := range schedules {
+		m[relat.Id] = true
+	}
+	for _, res := range results {
+		if !m[res.Id] {
+			impl.db.Where("id = ?", res.Id).Delete(&res)
+		}
+	}
+	return impl.GetSchedules(ctx, userId)
 }

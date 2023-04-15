@@ -25,6 +25,7 @@ func RunHttp() {
 		userInfo.POST("/signIn", controller.NewTennisMomentControllerImpl().SignIn)
 		userInfo.POST("/signUp", controller.NewTennisMomentControllerImpl().SignUp)
 		userInfo.POST("/resetPassword", controller.NewTennisMomentControllerImpl().ResetPassword)
+		userInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateUser)
 	}
 
 	scheduleInfo := r.Group("/schedule")
@@ -52,13 +53,18 @@ func RunHttp() {
 		gameInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateGameAndStats)
 		gameInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddGame)
 		gameInfo.POST("/searchAll", controller.NewTennisMomentControllerImpl().SearchAllGames)
-		gameInfo.POST("/search", controller.NewTennisMomentControllerImpl().GetHistoryGames)
+		gameInfo.POST("/h2h", controller.NewTennisMomentControllerImpl().GetHistoryGames)
 		gameInfo.POST("/searchRecent", controller.NewTennisMomentControllerImpl().SearchRecentGames)
 	}
 
 	statsInfo := r.Group("/stats")
 	{
 		statsInfo.POST("/search", controller.NewTennisMomentControllerImpl().SearchStats)
+	}
+
+	clubInfo := r.Group("/club")
+	{
+		clubInfo.POST("/getInfos", controller.NewTennisMomentControllerImpl().GetClubInfos)
 	}
 
 	r.Run(":8080")

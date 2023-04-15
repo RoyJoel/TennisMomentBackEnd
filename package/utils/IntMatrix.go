@@ -67,6 +67,28 @@ func (m IntMatrix3) Value() (driver.Value, error) {
 	return buf.Bytes(), nil
 }
 
+func (m IntMatrix3) Equals(other IntMatrix3) bool {
+	if len(m) != len(other) {
+		return false
+	}
+	for i, row := range m {
+		if len(row) != len(other[i]) {
+			return false
+		}
+		for j, col := range row {
+			if len(col) != len(other[i][j]) {
+				return false
+			}
+			for k, val := range col {
+				if val != other[i][j][k] {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
 type IntMatrix2 [][]int64
 
 func (m *IntMatrix2) Scan(value interface{}) error {
@@ -117,6 +139,22 @@ func (m IntMatrix2) Value() (driver.Value, error) {
 
 	return buf.Bytes(), nil
 }
+func (m IntMatrix2) Equals(other IntMatrix2) bool {
+	if len(m) != len(other) {
+		return false
+	}
+	for i, row := range m {
+		if len(row) != len(other[i]) {
+			return false
+		}
+		for j, val := range row {
+			if val != other[i][j] {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 type IntMatrix []int64
 
@@ -157,4 +195,16 @@ func (m IntMatrix) Value() (driver.Value, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func (m IntMatrix) Equals(other IntMatrix) bool {
+	if len(m) != len(other) {
+		return false
+	}
+	for i, val := range m {
+		if val != other[i] {
+			return false
+		}
+	}
+	return true
 }

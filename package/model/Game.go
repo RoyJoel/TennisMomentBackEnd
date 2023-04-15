@@ -56,6 +56,28 @@ func (game Game) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func (g Game) Equals(other Game) bool {
+	return g.Id == other.Id &&
+		g.Place == other.Place &&
+		g.Surface == other.Surface &&
+		g.SetNum == other.SetNum &&
+		g.GameNum == other.GameNum &&
+		g.Round == other.Round &&
+		g.IsGoldenGoal == other.IsGoldenGoal &&
+		g.IsPlayer1Serving == other.IsPlayer1Serving &&
+		g.IsPlayer1Left == other.IsPlayer1Left &&
+		g.IsChangePosition == other.IsChangePosition &&
+		g.StartDate == other.StartDate &&
+		g.EndDate == other.EndDate &&
+		g.Player1Id == other.Player1Id &&
+		g.Player1StatsId == other.Player1StatsId &&
+		g.Player2Id == other.Player2Id &&
+		g.Player2StatsId == other.Player2StatsId &&
+		g.IsPlayer1FirstServe == other.IsPlayer1FirstServe &&
+		g.IsPlayer2FirstServe == other.IsPlayer2FirstServe &&
+		g.Result.Equals(other.Result)
+}
+
 // Redis类似序列化操作
 func (game Game) MarshalBinary() ([]byte, error) {
 	return json.Marshal(game)

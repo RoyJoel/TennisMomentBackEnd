@@ -2,11 +2,9 @@ package cache
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/RoyJoel/TennisMomentBackEnd/package/config"
-	"github.com/RoyJoel/TennisMomentBackEnd/package/model"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -17,96 +15,45 @@ type TennisMomentCacheDAOImpl struct {
 
 type TennisMomentCacheDAO interface {
 	// set一个
-	SetGame(ctx context.Context, key string, info model.Game, t time.Duration) bool
+	AddDeviceJwtMapping(client *redis.Client, deviceID string, jwt string) error
 	// 根据ID获取一个
-	GetGameById(ctx context.Context, key string) model.Game
+	GetJwtByDeviceID(ctx context.Context, client *redis.Client, deviceID string) (string, error)
+
+	GetDeviceIDByJwt(ctx context.Context, client *redis.Client, jwt string) (string, error)
 }
 
 func NewTennisMomentCacheDAOImpl() *TennisMomentCacheDAOImpl {
 	return &TennisMomentCacheDAOImpl{db: config.RDB}
 }
 
-func (impl TennisMomentCacheDAOImpl) SetGame(ctx context.Context, key string, info model.Game, t time.Duration) bool {
-	res := impl.db.Set(ctx, key, info, t)
-	result, _ := res.Result()
-	if result != "OK" {
-		return false
-	}
-	return true
+// 把设备ID和JWT添加到映射表中，并设置过期时间
+func AddDeviceJwtMapping(client *redis.Client, deviceID string, jwt string) error {
+    expiration := time.Hour * 24 * 7 // 设置过期时间为7天
+    err := client.Set(context.Background(), deviceID, jwt, expiration).Err()
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
-func (impl TennisMomentCacheDAOImpl) GetGame(ctx context.Context, key string) model.Game {
-	res := impl.db.Get(ctx, key)
-	var info model.Game
-	j := res.Val()
-	json.Unmarshal([]byte(j), &info)
-	return info
+// 根据设备ID获取对应的JWT
+func GetJwtByDeviceID(ctx context.Context, client *redis.Client, deviceID string) (string, error) {
+    jwt, err := client.Get(ctx, deviceID).Result()
+    if err == redis.Nil {
+        return "", nil
+    } else if err != nil {
+        return "", err
+    }
+    return jwt, nil
 }
 
-func (impl TennisMomentCacheDAOImpl) SetPlayer(ctx context.Context, key string, info model.Player, t time.Duration) bool {
-	res := impl.db.Set(ctx, key, info, t)
-	result, _ := res.Result()
-	if result != "OK" {
-		return false
-	}
-	return true
-}
-
-func (impl TennisMomentCacheDAOImpl) GetPlayer(ctx context.Context, key string) model.Player {
-	res := impl.db.Get(ctx, key)
-	var info model.Player
-	j := res.Val()
-	json.Unmarshal([]byte(j), &info)
-	return info
-}
-
-func (impl TennisMomentCacheDAOImpl) SetPlayerStats(ctx context.Context, key string, info model.PlayerStats, t time.Duration) bool {
-	res := impl.db.Set(ctx, key, info, t)
-	result, _ := res.Result()
-	if result != "OK" {
-		return false
-	}
-	return true
-}
-
-func (impl TennisMomentCacheDAOImpl) GetPlayerStats(ctx context.Context, key string) model.PlayerStats {
-	res := impl.db.Get(ctx, key)
-	var info model.PlayerStats
-	j := res.Val()
-	json.Unmarshal([]byte(j), &info)
-	return info
-}
-
-func (impl TennisMomentCacheDAOImpl) SetRelationship(ctx context.Context, key string, info model.Relationship, t time.Duration) bool {
-	res := impl.db.Set(ctx, key, info, t)
-	result, _ := res.Result()
-	if result != "OK" {
-		return false
-	}
-	return true
-}
-
-func (impl TennisMomentCacheDAOImpl) GetRelationship(ctx context.Context, key string) model.Relationship {
-	res := impl.db.Get(ctx, key)
-	var info model.Relationship
-	j := res.Val()
-	json.Unmarshal([]byte(j), &info)
-	return info
-}
-
-func (impl TennisMomentCacheDAOImpl) SetStats(ctx context.Context, key string, info model.Stats, t time.Duration) bool {
-	res := impl.db.Set(ctx, key, info, t)
-	result, _ := res.Result()
-	if result != "OK" {
-		return false
-	}
-	return true
-}
-
-func (impl TennisMomentCacheDAOImpl) GetStats(ctx context.Context, key string) model.Stats {
-	res := impl.db.Get(ctx, key)
-	var info model.Stats
-	j := res.Val()
-	json.Unmarshal([]byte(j), &info)
-	return info
+// 根据JWT获取对应的设备ID
+func GetDeviceIDByJwt(ctx context.Context, client *redis.Client, jwt string) (string, error) {
+    deviceID, err := client.Get(ctx, jwt).Result()
+    if err == redis.Nil {
+        return "", nil
+    } else if err != nil {
+        return "", err
+    }
+    return deviceID, nil
 }

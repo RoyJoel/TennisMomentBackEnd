@@ -41,13 +41,13 @@ func (Club Club) UnmarshalBinary(data []byte) error {
 }
 
 type ClubResponse struct {
-	Id      int64                `json:"id"`
-	Name    string               `json:" name"`
-	Icon    string               `json:"icon"`
-	Intro   string               `json:"events"`
-	Owner   PlayerResponse `json:"ownerId"`
-	Address string               `json:"address"`
-	Events  []EventResponse      `json:"events"`
+	Id      int64           `json:"id"`
+	Name    string          `json:"name"`
+	Icon    string          `json:"icon"`
+	Intro   string          `json:"intro"`
+	Owner   PlayerResponse  `json:"owner"`
+	Address string          `json:"address"`
+	Events  []EventResponse `json:"events"`
 }
 
 func (ClubResponse ClubResponse) MarshalJSON() ([]byte, error) {

@@ -5,6 +5,7 @@ import (
 )
 
 type Schedule struct {
+	Id        int64   `json:"id"`
 	Place     string  `json:"place"`
 	StartDate float64 `json:"startDate"`
 	Player1Id int64   `json:"player1Id"`
@@ -17,6 +18,7 @@ func (Schedule Schedule) TableName() string {
 
 func (Schedule Schedule) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
+		"id":        Schedule.Id,
 		"place":     Schedule.Place,
 		"startDate": Schedule.StartDate,
 		"player1Id": Schedule.Player1Id,
@@ -34,6 +36,7 @@ func (Schedule Schedule) UnmarshalBinary(data []byte) error {
 }
 
 type ScheduleResponse struct {
+	Id        int64          `json:"id"`
 	Place     string         `json:"place"`
 	StartDate float64        `json:"startDate"`
 	Opponent  PlayerResponse `json:"opponent"`
@@ -41,6 +44,7 @@ type ScheduleResponse struct {
 
 func (scheduleResponse ScheduleResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
+		"id":        scheduleResponse.Id,
 		"place":     scheduleResponse.Place,
 		"startDate": scheduleResponse.StartDate,
 		"opponent":  scheduleResponse.Opponent,
