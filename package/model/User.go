@@ -28,6 +28,9 @@ type User struct {
 	AllUnfinishedGames []GameResponse     `json:"allUnfinishedGames"`
 	AllEvents          utils.IntMatrix    `json:"allEvents"`
 	AllSchedules       []ScheduleResponse `json:"allSchedules"`
+	Addresss           utils.IntMatrix    `json:"addresss"`
+	AllOrders          utils.IntMatrix    `json:"allOrders"`
+	Cart               int64              `json:"cart"`
 	Token              string             `json:"token"`
 }
 
@@ -54,6 +57,9 @@ func (User User) MarshalJSON() ([]byte, error) {
 		"allUnfinishedGames": User.AllUnfinishedGames,
 		"allEvents":          User.AllEvents,
 		"allSchedules":       User.AllSchedules,
+		"addresss":           User.Addresss,
+		"allOrders":          User.AllOrders,
+		"cart":               User.Cart,
 		"token":              User.Token,
 	})
 }

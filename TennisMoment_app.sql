@@ -17,6 +17,61 @@ CREATE TABLE `Player`
 	`career_stats_id` INT(11) NOT NULL
 );
 
+CREATE TABLE `Commodity`
+(
+	`id` BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+	`intro` varchar(255) NOT NULL,
+	`price`  DOUBLE NOT NULL,
+	`limit` int(11)  NOT NULL,
+	`cag` int(11)  NOT NULL
+);
+
+CREATE TABLE `Bill`
+(
+	`id` BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    `com_id` BIGINT  NOT NULL,
+    `quantity` int(11)  NOT NULL,
+    `opinion_id` BIGINT  NOT NULL,
+	`order_id` BIGINT  NOT NULL
+);
+
+CREATE TABLE `Option`
+(
+	`id` BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+	`com_id` BIGINT  NOT NULL,
+	`image` VARCHAR(255) NOT NULL,
+	`intro` varchar(255) NOT NULL,
+);
+
+CREATE TABLE `Order`
+(
+	`id` BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+	`shipping_address_id` BIGINT  NOT NULL,
+	`delivery_address_id` BIGINT  NOT NULL,
+	`create_time` DOUBLE NOT NULL,
+	`payed_time` DOUBLE NOT NULL,
+	`completed_time` DOUBLE NOT NULL,
+	`state` int(11)  NOT NULL
+);
+
+CREATE TABLE `Address`
+(
+	`id` BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+	`name` varchar(255) NOT NULL,
+	`sex` varchar(255) NOT NULL,
+	`phone_number` VARCHAR(255) NOT NULL,
+	`province` VARCHAR(255) NOT NULL,
+	`city` VARCHAR(255) NOT NULL,
+	`area` VARCHAR(255) NOT NULL,
+	`detailed_address` VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE `Cart`
+(
+	`player_id` BIGINT NOT NULL,
+	`order_id` BIGINT NOT NULL
+);
+
 CREATE TABLE `Relationship`
 (
 	`player1_id` BIGINT NOT NULL,

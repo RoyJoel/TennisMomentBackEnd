@@ -123,7 +123,7 @@ func (impl TennisMomentControllerImpl) SignUp(c *gin.Context) {
 		Res  bool       `json:"res"`
 	}
 	result := addResponse{User: user, Res: res}
-	fmt.Println(result)
+	fmt.Println(user)
 
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": result})
 }
@@ -342,5 +342,231 @@ func (impl TennisMomentControllerImpl) GetClubInfos(c *gin.Context) {
 		club := impl.dao.GetClubInfo(c, id)
 		res = append(res, club)
 	}
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) AddOrder(c *gin.Context) {
+
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	order := model.OrderResponse{}
+	json.Unmarshal(bytes, &order)
+	if err != nil {
+		panic(err)
+	}
+
+	res := impl.dao.AddOrder(c, order)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) AddAddress(c *gin.Context) {
+
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	address := model.Address{}
+	json.Unmarshal(bytes, &address)
+	if err != nil {
+		panic(err)
+	}
+
+	res := impl.dao.AddAddress(c, address)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) UpdateAddress(c *gin.Context) {
+
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	address := model.Address{}
+	json.Unmarshal(bytes, &address)
+	if err != nil {
+		panic(err)
+	}
+
+	res := impl.dao.UpdateAddress(c, address)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) GetAddressInfos(c *gin.Context) {
+	type SearchPlayerRequest struct {
+		Ids utils.IntMatrix `json:"ids"`
+	}
+
+	var req SearchPlayerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+	res := make([]model.AddressResponse, 0)
+
+	for _, id := range req.Ids {
+		address := impl.dao.GetAddressInfo(c, id)
+		res = append(res, address)
+		fmt.Println(res)
+	}
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) GetOrderInfosByUserId(c *gin.Context) {
+	type SearchPlayerRequest struct {
+		Id int64 `json:"id"`
+	}
+
+	var req SearchPlayerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+
+	res := impl.dao.GetOrderInfosByUserId(c, req.Id)
+
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) GetCartInfo(c *gin.Context) {
+	type SearchPlayerRequest struct {
+		Id int64 `json:"id"`
+	}
+
+	var req SearchPlayerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+
+	res := impl.dao.GetOrderInfo(c, req.Id)
+
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) AddBillToCart(c *gin.Context) {
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	bill := model.Bill{}
+	json.Unmarshal(bytes, &bill)
+	if err != nil {
+		panic(err)
+	}
+	// Game.Role = 1
+	res := impl.dao.AddBillToCart(c, &bill)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) DeleteBillInCart(c *gin.Context) {
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	bill := model.Bill{}
+	json.Unmarshal(bytes, &bill)
+	if err != nil {
+		panic(err)
+	}
+	// Game.Role = 1
+	res := impl.dao.DeleteBillInCart(c, &bill)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) AssignCartForUser(c *gin.Context) {
+	type AssignCartRequest struct {
+		Id int64 `json:"id"`
+	}
+
+	var req AssignCartRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+
+	res := impl.dao.AssignCartForUser(c, req.Id)
+
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) AddCommodity(c *gin.Context) {
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	commodity := model.CommodityResponse{}
+	json.Unmarshal(bytes, &commodity)
+	if err != nil {
+		panic(err)
+	}
+	// Game.Role = 1
+	res := impl.dao.AddCommodity(c, commodity)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) DeleteCommodity(c *gin.Context) {
+	type DeleteCommodityRequest struct {
+		Id int64 `json:"id"`
+	}
+
+	var req DeleteCommodityRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+
+	res := impl.dao.DeleteCommodity(c, req.Id)
+
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) AddOption(c *gin.Context) {
+	type AddOptionRequest struct {
+		Option model.OptionResponse `json:"option"`
+		ComId  int64                `json:"comId"`
+	}
+
+	var req AddOptionRequest
+	// Game.Role = 1
+	res := impl.dao.AddOption(c, req.Option, req.ComId)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) UpdateOption(c *gin.Context) {
+	type UpdateOptionRequest struct {
+		Option model.OptionResponse `json:"option"`
+		ComId  int64                `json:"comId"`
+	}
+
+	var req UpdateOptionRequest
+	// Game.Role = 1
+	res := impl.dao.UpdateOption(c, req.Option, req.ComId)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) DeleteOption(c *gin.Context) {
+	type DeleteOptionRequest struct {
+		Id int64 `json:"id"`
+	}
+
+	var req DeleteOptionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+
+	res := impl.dao.DeleteOption(c, req.Id)
+
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) UpdateCommodity(c *gin.Context) {
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	commodity := model.CommodityResponse{}
+	json.Unmarshal(bytes, &commodity)
+	if err != nil {
+		panic(err)
+	}
+	// Game.Role = 1
+	res := impl.dao.UpdateCommodity(c, commodity)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) GetAllCommodities(c *gin.Context) {
+
+	res := impl.dao.GetAllCommodities(c)
+
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) GetAllOrders(c *gin.Context) {
+
+	res := impl.dao.GetAllOrders(c)
+
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
 }

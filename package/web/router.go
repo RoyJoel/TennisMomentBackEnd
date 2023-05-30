@@ -67,5 +67,56 @@ func RunHttp() {
 		clubInfo.POST("/getInfos", controller.NewTennisMomentControllerImpl().GetClubInfos)
 	}
 
+	orderInfo := r.Group("/order")
+	{
+		orderInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddOrder)
+		// orderInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteOrder)
+		// orderInfo.POST("/search", controller.NewTennisMomentControllerImpl().GetOrderInfos)
+		// orderInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateOrder)
+		orderInfo.POST("/getInfos", controller.NewTennisMomentControllerImpl().GetOrderInfosByUserId)
+		orderInfo.GET("/getAll", controller.NewTennisMomentControllerImpl().GetAllOrders)
+	}
+
+	addressInfo := r.Group("/address")
+	{
+		addressInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddAddress)
+		// addressInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteAddress)
+		addressInfo.POST("/getInfos", controller.NewTennisMomentControllerImpl().GetAddressInfos)
+		addressInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateAddress)
+	}
+
+	cartInfo := r.Group("/cart")
+	{
+		cartInfo.POST("/getInfo", controller.NewTennisMomentControllerImpl().GetCartInfo)
+		cartInfo.POST("/addBill", controller.NewTennisMomentControllerImpl().AddBillToCart)
+		cartInfo.POST("/deleteBill", controller.NewTennisMomentControllerImpl().DeleteBillInCart)
+		cartInfo.POST("/assign", controller.NewTennisMomentControllerImpl().AssignCartForUser)
+	}
+
+	commodityInfo := r.Group("/commodity")
+	{
+		commodityInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddCommodity)
+		commodityInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteCommodity)
+		// commodityInfo.POST("/search", controller.NewTennisMomentControllerImpl().getCommodityInfo)
+		commodityInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateCommodity)
+		commodityInfo.GET("/getAll", controller.NewTennisMomentControllerImpl().GetAllCommodities)
+	}
+
+	optionInfo := r.Group("/option")
+	{
+		optionInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddOption)
+		optionInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateOption)
+		optionInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteOption)
+
+	}
+
+	// billInfo := r.Group("/bill")
+	// {
+	// billInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddBill)
+	// billInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteBill)
+	// billInfo.POST("/search", controller.NewTennisMomentControllerImpl().getBillInfo)
+	// billInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateBill)
+	// }
+
 	r.Run(":8080")
 }

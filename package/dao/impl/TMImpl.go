@@ -52,11 +52,45 @@ func (impl *TennisMomentDaoImpl) AddGame(ctx context.Context, game *model.Game) 
 	return *&gameResponse
 }
 
+func (impl *TennisMomentDaoImpl) assignIdAndSaveGame(ctx context.Context, game *model.GameResponse) {
+	newGame := model.Game{}
+	newGame.Result = utils.IntMatrix3{{{0, 0}}}
+	impl.db.Create(&newGame)
+
+	fmt.Println(newGame)
+
+	Stats1 := model.Stats{}
+	Stats2 := model.Stats{}
+
+	impl.db.Create(&Stats1)
+	impl.db.Create(&Stats2)
+
+	PlayerStats1 := model.PlayerStats{PlayerId: game.Player1.Id, StatsId: Stats1.Id}
+	PlayerStats2 := model.PlayerStats{PlayerId: game.Player2.Id, StatsId: Stats2.Id}
+
+	impl.db.Create(&PlayerStats1)
+	impl.db.Create(&PlayerStats2)
+
+	game.Id = newGame.Id
+	game.Player1Stats.Id = Stats1.Id
+	game.Player2Stats.Id = Stats2.Id
+
+	fmt.Println(game.Id, newGame.Id, game.Player1Stats.Id, game.Player2Stats.Id)
+	gameToSave := model.Game{Id: game.Id, Place: game.Place, Surface: game.Surface, SetNum: game.SetNum, GameNum: game.GameNum, Round: game.Round, IsGoldenGoal: game.IsGoldenGoal, IsPlayer1Serving: game.IsPlayer1Serving, IsPlayer1Left: game.IsPlayer1Left, IsChangePosition: game.IsChangePosition, StartDate: game.StartDate, EndDate: game.EndDate, Player1Id: game.Player1.Id, Player1StatsId: game.Player1Stats.Id, Player2Id: game.Player2.Id, Player2StatsId: game.Player2Stats.Id, IsPlayer1FirstServe: game.IsPlayer1FirstServe, IsPlayer2FirstServe: game.IsPlayer2FirstServe, Result: game.Result}
+	impl.db.Save(&gameToSave)
+	impl.db.Save(&game.Player1Stats)
+	impl.db.Save(&game.Player2Stats)
+	impl.UpdateStats(ctx, game.Player1Stats, game.Player1.CareerStats.Id)
+	impl.UpdateStats(ctx, game.Player2Stats, game.Player2.CareerStats.Id)
+}
+
 func (impl *TennisMomentDaoImpl) UpdateGameAndStats(ctx context.Context, gameResponse model.GameResponse) model.GameResponse {
 	game := model.Game{Id: gameResponse.Id, Place: gameResponse.Place, Surface: gameResponse.Surface, SetNum: gameResponse.SetNum, GameNum: gameResponse.GameNum, Round: gameResponse.Round, IsGoldenGoal: gameResponse.IsGoldenGoal, IsPlayer1Serving: gameResponse.IsPlayer1Serving, IsPlayer1Left: gameResponse.IsPlayer1Left, IsChangePosition: gameResponse.IsChangePosition, StartDate: gameResponse.StartDate, EndDate: gameResponse.EndDate, Player1Id: gameResponse.Player1.Id, Player1StatsId: gameResponse.Player1Stats.Id, Player2Id: gameResponse.Player2.Id, Player2StatsId: gameResponse.Player2Stats.Id, IsPlayer1FirstServe: gameResponse.IsPlayer1FirstServe, IsPlayer2FirstServe: gameResponse.IsPlayer2FirstServe, Result: gameResponse.Result}
 	var Game model.Game
 	impl.db.Where("id = ?", game.Id).First(&Game)
-	if !Game.Equals(game) {
+	if game.Id == 0 {
+		impl.assignIdAndSaveGame(ctx, &gameResponse)
+	} else if !Game.Equals(game) {
 		impl.db.Where("id = ?", game.Id).Save(&game)
 		impl.UpdateStats(ctx, gameResponse.Player1Stats, gameResponse.Player1.CareerStats.Id)
 		impl.UpdateStats(ctx, gameResponse.Player2Stats, gameResponse.Player2.CareerStats.Id)
@@ -189,6 +223,23 @@ func (impl *TennisMomentDaoImpl) GetAllHistoryGames(ctx context.Context, playerI
 	return gameResponses
 }
 
+func (impl *TennisMomentDaoImpl) UpdateGameDB(ctx context.Context, userId int64, games []model.GameResponse, isFinished bool) []model.GameResponse {
+
+	var results []model.Game
+
+	m := make(map[int64]bool)
+	impl.db.Where("id = ?", userId, userId).Find(&results)
+	for _, relat := range games {
+		m[relat.Id] = true
+	}
+	for _, res := range results {
+		if !m[res.Id] {
+			impl.db.Where("id = ?", res.Id).Delete(&res)
+		}
+	}
+	return impl.GetAllHistoryGames(ctx, userId, isFinished)
+}
+
 func (impl *TennisMomentDaoImpl) AddPlayer(ctx context.Context, Player model.Player) (model.PlayerResponse, bool) {
 
 	res := impl.SearchPlayer(ctx, Player.LoginName)
@@ -221,10 +272,20 @@ func (impl *TennisMomentDaoImpl) SignUp(ctx context.Context, user model.User) (m
 	} else {
 		friends = user.Friends
 	}
+	cart := impl.AddCartForPlayer(ctx, player.Id)
 	// 生成 token string
 	tokenStr, _ := middleware.GenerateToken(user.LoginName, user.Password)
-	user = model.User{Id: player.Id, LoginName: player.LoginName, Password: user.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: player.CareerStats, Friends: friends, AllHistoryGames: make([]model.GameResponse, 0), AllUnfinishedGames: make([]model.GameResponse, 0), AllClubs: utils.IntMatrix{}, AllSchedules: make([]model.ScheduleResponse, 0), AllEvents: utils.IntMatrix{}, Token: tokenStr}
+	user = model.User{Id: player.Id, LoginName: player.LoginName, Password: user.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: player.CareerStats, Friends: friends, AllHistoryGames: make([]model.GameResponse, 0), AllUnfinishedGames: make([]model.GameResponse, 0), AllClubs: utils.IntMatrix{}, AllSchedules: make([]model.ScheduleResponse, 0), AllEvents: utils.IntMatrix{}, AllOrders: utils.IntMatrix{}, Addresss: utils.IntMatrix{}, Cart: cart, Token: tokenStr}
 	return user, res
+}
+func (impl *TennisMomentDaoImpl) AddCartForPlayer(ctx context.Context, playerId int64) int64 {
+	cart := model.Cart{}
+	impl.db.Where("player_id = ?", playerId).Delete(&cart)
+	newOrder := model.Order{PlayerId: playerId, State: 0}
+	impl.db.Create(&newOrder)
+	newCart := model.Cart{PlayerId: playerId, OrderId: newOrder.Id}
+	impl.db.Create(&newCart)
+	return newOrder.Id
 }
 
 func (impl *TennisMomentDaoImpl) UpdateUser(ctx context.Context, user model.User) model.User {
@@ -241,9 +302,11 @@ func (impl *TennisMomentDaoImpl) UpdateUser(ctx context.Context, user model.User
 	for _, game := range user.AllHistoryGames {
 		impl.UpdateGameAndStats(ctx, game)
 	}
+	user.AllHistoryGames = impl.UpdateGameDB(ctx, user.Id, user.AllHistoryGames, true)
 	for _, game := range user.AllUnfinishedGames {
 		impl.UpdateGameAndStats(ctx, game)
 	}
+	user.AllUnfinishedGames = impl.UpdateGameDB(ctx, user.Id, user.AllUnfinishedGames, false)
 	for _, event := range user.AllEvents {
 		impl.UpdateEvent(ctx, model.EventPlayer{EventId: event, PlayerId: user.Id})
 	}
@@ -251,7 +314,7 @@ func (impl *TennisMomentDaoImpl) UpdateUser(ctx context.Context, user model.User
 		impl.UpdateSchedule(ctx, model.Schedule{Id: schedule.Id, StartDate: schedule.StartDate, Place: schedule.Place, Player1Id: user.Id, Player2Id: schedule.Opponent.Id})
 	}
 	user.AllSchedules = impl.UpdateScheduleDB(ctx, user.Id, user.AllSchedules)
-	return model.User{Id: playerResponse.Id, LoginName: playerResponse.LoginName, Password: playerResponse.Password, Name: playerResponse.Name, Icon: playerResponse.Icon, Sex: playerResponse.Sex, Age: playerResponse.Age, YearsPlayed: playerResponse.YearsPlayed, Height: playerResponse.Height, Width: playerResponse.Width, Grip: playerResponse.Grip, Backhand: playerResponse.Backhand, Points: playerResponse.Points, IsAdult: playerResponse.IsAdult, CareerStats: playerResponse.CareerStats, Friends: user.Friends, AllClubs: user.AllClubs, AllHistoryGames: user.AllHistoryGames, AllUnfinishedGames: user.AllUnfinishedGames, AllEvents: user.AllEvents, AllSchedules: user.AllSchedules, Token: user.Token}
+	return model.User{Id: playerResponse.Id, LoginName: playerResponse.LoginName, Password: playerResponse.Password, Name: playerResponse.Name, Icon: playerResponse.Icon, Sex: playerResponse.Sex, Age: playerResponse.Age, YearsPlayed: playerResponse.YearsPlayed, Height: playerResponse.Height, Width: playerResponse.Width, Grip: playerResponse.Grip, Backhand: playerResponse.Backhand, Points: playerResponse.Points, IsAdult: playerResponse.IsAdult, CareerStats: playerResponse.CareerStats, Friends: user.Friends, AllClubs: user.AllClubs, AllHistoryGames: user.AllHistoryGames, AllUnfinishedGames: user.AllUnfinishedGames, AllEvents: user.AllEvents, AllSchedules: user.AllSchedules, AllOrders: user.AllOrders, Addresss: user.Addresss, Cart: user.Cart, Token: user.Token}
 }
 
 func (impl *TennisMomentDaoImpl) SignIn(ctx context.Context, userLoginName string, userPassword string) (*model.User, error) {
@@ -262,12 +325,15 @@ func (impl *TennisMomentDaoImpl) SignIn(ctx context.Context, userLoginName strin
 		unfinishedGames := impl.GetAllHistoryGames(ctx, player.Id, false)
 		clubs := impl.GetMyClubs(ctx, player.Id)
 		schedules := impl.GetSchedules(ctx, player.Id)
+		allOrders := impl.GetMyOrders(ctx, player.Id)
+		addresss := impl.GetMyAddresss(ctx, player.Id)
+		cart := impl.GetMyCart(ctx, player.Id)
 		// 生成 token string
 		tokenStr, error := middleware.GenerateToken(player.LoginName, player.Password)
 		if error != nil {
 			return nil, error
 		} else {
-			user := model.User{Id: player.Id, LoginName: player.LoginName, Password: player.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: player.CareerStats, Friends: friends, AllUnfinishedGames: unfinishedGames, AllHistoryGames: games, AllClubs: clubs, AllEvents: utils.IntMatrix{}, AllSchedules: schedules, Token: tokenStr}
+			user := model.User{Id: player.Id, LoginName: player.LoginName, Password: player.Password, Name: player.Name, Icon: player.Icon, Sex: player.Sex, Age: player.Age, YearsPlayed: player.YearsPlayed, Height: player.Height, Width: player.Width, Grip: player.Grip, Backhand: player.Backhand, Points: player.Points, IsAdult: player.IsAdult, CareerStats: player.CareerStats, Friends: friends, AllUnfinishedGames: unfinishedGames, AllHistoryGames: games, AllClubs: clubs, AllEvents: utils.IntMatrix{}, AllSchedules: schedules, AllOrders: allOrders, Addresss: addresss, Cart: cart, Token: tokenStr}
 			return &user, nil
 		}
 	} else {
@@ -430,7 +496,7 @@ func (impl *TennisMomentDaoImpl) AddSchedule(ctx context.Context, schedule model
 func (impl *TennisMomentDaoImpl) DeleteFriend(ctx context.Context, relationship model.Relationship) []model.PlayerResponse {
 	if impl.SearchFriend(ctx, relationship) {
 		impl.db.Where("player1_id = ? AND player2_id = ?", relationship.Player1Id, relationship.Player2Id).Delete(&relationship)
-		impl.db.Where("player1_id = ? AND player2_id = ?", relationship.Player1Id, relationship.Player2Id).Delete(&relationship)
+		impl.db.Where("player1_id = ? AND player2_id = ?", relationship.Player2Id, relationship.Player1Id).Delete(&relationship)
 	}
 	return impl.GetAllFriends(ctx, relationship.Player1Id)
 }
@@ -439,7 +505,7 @@ func (impl *TennisMomentDaoImpl) SearchFriend(ctx context.Context, relationship 
 	var Relationship1 model.Relationship
 	var Relationship2 model.Relationship
 	impl.db.Where("player1_id = ? AND player2_id = ?", relationship.Player1Id, relationship.Player2Id).First(&Relationship1)
-	impl.db.Where("player1_id = ? AND player2_id = ?", relationship.Player1Id, relationship.Player2Id).First(&Relationship2)
+	impl.db.Where("player1_id = ? AND player2_id = ?", relationship.Player2Id, relationship.Player1Id).First(&Relationship2)
 	return Relationship1 == relationship || Relationship2 == relationship
 
 }
@@ -486,7 +552,7 @@ func (impl *TennisMomentDaoImpl) UpdateStats(ctx context.Context, Stats model.St
 	careerStats.UnforcedErrors += Stats.UnforcedErrors
 	careerStats.ForehandWinners += Stats.ForehandWinners
 	careerStats.BackhandWinners += Stats.BackhandWinners
-	impl.db.Save(careerStats)
+	impl.db.Save(&careerStats)
 	return Stats
 }
 
@@ -640,4 +706,327 @@ func (impl *TennisMomentDaoImpl) UpdateScheduleDB(ctx context.Context, userId in
 		}
 	}
 	return impl.GetSchedules(ctx, userId)
+}
+
+func (impl *TennisMomentDaoImpl) UpdateOrder(ctx context.Context, order model.Order) model.OrderResponse {
+	impl.db.Save(&order)
+	return impl.GetOrderInfo(ctx, order.Id)
+}
+
+func (impl *TennisMomentDaoImpl) GetOrderInfo(ctx context.Context, orderId int64) model.OrderResponse {
+	order := model.Order{}
+	impl.db.Where("id = ?", orderId).First(&order)
+
+	bills := impl.GetBillInfos(ctx, order.Id)
+	shippingAddress := impl.GetAddressInfo(ctx, order.ShippingAddressId)
+	deliveryAddress := impl.GetAddressInfo(ctx, order.DeliveryAddressId)
+
+	return model.OrderResponse{Id: order.Id, Bills: bills, ShippingAddress: shippingAddress, DeliveryAddress: deliveryAddress, CreatedTime: order.CreatedTime, PayedTime: order.PayedTime, CompletedTime: order.CompletedTime, State: order.State}
+}
+
+func (impl *TennisMomentDaoImpl) GetOrderInfosByUserId(ctx context.Context, playerId int64) []model.OrderResponse {
+	orders := make([]model.Order, 0)
+	impl.db.Where("player_id = ?", playerId).Find(&orders)
+
+	orderResponses := make([]model.OrderResponse, 0)
+	for _, order := range orders {
+		bills := impl.GetBillInfos(ctx, order.Id)
+		shippingAddress := impl.GetAddressInfo(ctx, order.ShippingAddressId)
+		deliveryAddress := impl.GetAddressInfo(ctx, order.DeliveryAddressId)
+
+		orderResponse := model.OrderResponse{Id: order.Id, Bills: bills, ShippingAddress: shippingAddress, DeliveryAddress: deliveryAddress, CreatedTime: order.CreatedTime, PayedTime: order.PayedTime, CompletedTime: order.CompletedTime, State: order.State}
+
+		orderResponses = append(orderResponses, orderResponse)
+	}
+	fmt.Println(orderResponses)
+	return orderResponses
+}
+
+func (impl *TennisMomentDaoImpl) AddBillToCart(ctx context.Context, bill *model.Bill) model.OrderResponse {
+
+	Bill := model.Bill{}
+	impl.db.Where("com_id = ? AND option_id = ? AND order_id = ?", bill.ComId, bill.OptionId, bill.OrderId).First(&Bill)
+	newBill := model.Bill{}
+	cart := impl.GetOrderInfo(ctx, bill.OrderId)
+	if Bill.ComId == bill.ComId && Bill.OptionId == bill.OptionId && Bill.OrderId == bill.OrderId {
+		Bill.Quantity += bill.Quantity
+		impl.db.Save(&Bill)
+	} else {
+		impl.db.Create(&newBill)
+		bill.Id = newBill.Id
+		impl.db.Save(&bill)
+		billInfo := impl.GetBillInfo(ctx, bill.Id)
+		cart.Bills = append(cart.Bills, billInfo)
+	}
+
+	return *&cart
+}
+
+func (impl *TennisMomentDaoImpl) DeleteBillInCart(ctx context.Context, bill *model.Bill) model.OrderResponse {
+
+	if impl.SearchBill(ctx, bill.Id) {
+		impl.db.Where("id = ?", bill.Id).Delete(&bill)
+	}
+
+	cart := impl.GetOrderInfo(ctx, bill.OrderId)
+	return cart
+}
+
+func (impl *TennisMomentDaoImpl) AssignCartForUser(ctx context.Context, playerId int64) int64 {
+
+	cart := impl.AddCartForPlayer(ctx, playerId)
+
+	return cart
+
+}
+
+func (impl *TennisMomentDaoImpl) GetAllCommodities(ctx context.Context) []model.CommodityResponse {
+	commodities := make([]model.Commodity, 0)
+	impl.db.Find(&commodities)
+
+	CommodityResponses := make([]model.CommodityResponse, 0)
+	for _, commodity := range commodities {
+		CommodityResponse := impl.GetCommodityInfo(ctx, commodity.Id)
+		CommodityResponses = append(CommodityResponses, CommodityResponse)
+	}
+
+	return CommodityResponses
+}
+
+func (impl *TennisMomentDaoImpl) GetAllOrders(ctx context.Context) []model.OrderResponse {
+	orders := make([]model.Order, 0)
+	impl.db.Find(&orders)
+
+	orderResponses := make([]model.OrderResponse, 0)
+	for _, orderResponse := range orderResponses {
+		orderResponse := impl.GetOrderInfo(ctx, orderResponse.Id)
+		orderResponses = append(orderResponses, orderResponse)
+	}
+
+	return orderResponses
+}
+
+func (impl *TennisMomentDaoImpl) GetBillInfos(ctx context.Context, orderId int64) []model.BillResponse {
+	bills := make([]model.Bill, 0)
+	impl.db.Where("order_id = ?", orderId).Find(&bills)
+
+	billResponses := make([]model.BillResponse, 0)
+	for _, bill := range bills {
+		commodity := impl.GetCommodityInfo(ctx, bill.ComId)
+		option := impl.GetOptionInfo(ctx, bill.OptionId)
+		billResponse := model.BillResponse{Id: bill.Id, Com: commodity, Quantity: bill.Quantity, Option: option}
+		billResponses = append(billResponses, billResponse)
+	}
+
+	return billResponses
+}
+
+func (impl *TennisMomentDaoImpl) GetOptionInfo(ctx context.Context, optionId int64) model.OptionResponse {
+	option := model.Option{}
+	impl.db.Where("id = ?", optionId).First(&option)
+
+	return model.OptionResponse{Id: option.Id, Image: option.Image, Intro: option.Intro, Price: option.Price, Inventory: option.Inventory}
+}
+
+func (impl *TennisMomentDaoImpl) GetAddressInfo(ctx context.Context, addressId int64) model.AddressResponse {
+	address := model.Address{}
+	impl.db.Where("id = ?", addressId).First(&address)
+	addressResponse := model.AddressResponse{Id: address.Id, Name: address.Name, Sex: address.Sex, PhoneNumber: address.PhoneNumber, Province: address.Province, City: address.City, Area: address.Area, DetailAddress: address.DetailedAddress}
+	return addressResponse
+}
+
+func (impl *TennisMomentDaoImpl) AddOrder(ctx context.Context, Order model.OrderResponse) int64 {
+
+	newOrder := model.Order{}
+	impl.db.Create(&newOrder)
+	order := model.Order{Id: newOrder.Id, ShippingAddressId: Order.ShippingAddress.Id, DeliveryAddressId: Order.DeliveryAddress.Id, PlayerId: Order.PlayerId, State: Order.State, Payment: Order.Payment, CreatedTime: Order.CreatedTime, PayedTime: Order.PayedTime, CompletedTime: Order.CompletedTime}
+	impl.db.Save(&order)
+	for _, bill := range Order.Bills {
+		billResponse := model.Bill{Id: bill.Id, ComId: bill.Com.Id, Quantity: bill.Quantity, OptionId: bill.Option.Id, OrderId: order.Id}
+		impl.AddBill(ctx, billResponse)
+	}
+	return order.Id
+}
+
+func (impl *TennisMomentDaoImpl) SearchOrder(ctx context.Context, id int64) bool {
+	var Order model.Order
+	impl.db.Where("id = ?", id).First(&Order)
+	return Order.Id == id
+}
+
+func (impl *TennisMomentDaoImpl) AddAddress(ctx context.Context, address model.Address) model.AddressResponse {
+
+	newAddress := model.Address{}
+	impl.db.Create(&newAddress)
+	address.Id = newAddress.Id
+	impl.db.Save(&address)
+	return model.AddressResponse{Id: address.Id, Name: address.Name, Sex: address.Sex, PhoneNumber: address.PhoneNumber, Province: address.Province, City: address.City, Area: address.Area, DetailAddress: address.DetailedAddress}
+}
+
+func (impl *TennisMomentDaoImpl) SearchAddress(ctx context.Context, id int64) bool {
+	var Address model.Address
+	impl.db.Where("id = ?", id).First(&Address)
+	return Address.Id == id
+}
+
+func (impl *TennisMomentDaoImpl) UpdateAddress(ctx context.Context, address model.Address) model.AddressResponse {
+	impl.db.Save(&address)
+	return impl.GetAddressInfo(ctx, address.Id)
+}
+
+func (impl *TennisMomentDaoImpl) AddBill(ctx context.Context, bill model.Bill) model.Bill {
+
+	newBill := model.Bill{}
+	impl.db.Create(&newBill)
+	bill.Id = newBill.Id
+	impl.db.Save(&bill)
+	return bill
+}
+
+func (impl *TennisMomentDaoImpl) UpdateBill(ctx context.Context, userId int64, Bill model.Bill) model.BillResponse {
+	impl.db.Save(&Bill)
+	return impl.GetBillInfo(ctx, Bill.Id)
+}
+
+func (impl *TennisMomentDaoImpl) GetBillInfo(ctx context.Context, billId int64) model.BillResponse {
+	bill := model.Bill{}
+	impl.db.Where("id = ?", billId).First(&bill)
+	com := impl.GetCommodityInfo(ctx, bill.ComId)
+	option := impl.GetOptionInfo(ctx, bill.OptionId)
+	billResponse := model.BillResponse{Id: bill.Id, Com: com, Quantity: bill.Quantity, Option: option}
+	return billResponse
+}
+func (impl *TennisMomentDaoImpl) SearchBill(ctx context.Context, id int64) bool {
+	var bill model.Bill
+	impl.db.Where("id = ?", id).First(&bill)
+	return bill.Id == id
+}
+
+func (impl *TennisMomentDaoImpl) AddCommodity(ctx context.Context, Commodity model.CommodityResponse) model.CommodityResponse {
+
+	newCommodity := model.Commodity{}
+	impl.db.Create(&newCommodity)
+	newCommodity.Name = Commodity.Name
+	newCommodity.Intro = Commodity.Intro
+	newCommodity.Cag = Commodity.Cag
+	newCommodity.State = Commodity.State
+	fmt.Print(newCommodity.Id)
+	fmt.Print(Commodity.Id)
+	for _, option := range Commodity.Options {
+		impl.AddOption(ctx, option, newCommodity.Id)
+	}
+	impl.db.Save(&newCommodity)
+	Commodity.Id = newCommodity.Id
+	return Commodity
+}
+
+func (impl *TennisMomentDaoImpl) AddOption(ctx context.Context, option model.OptionResponse, comId int64) []model.OptionResponse {
+	newOption := model.Option{}
+	impl.db.Create(&newOption)
+	newOption.Image = option.Image
+	newOption.Intro = option.Intro
+	newOption.Price = option.Price
+	newOption.Inventory = option.Inventory
+	newOption.ComId = comId
+	impl.db.Save(&newOption)
+	return impl.GetOptionsForCommidity(ctx, comId)
+}
+
+func (impl *TennisMomentDaoImpl) DeleteCommodity(ctx context.Context, id int64) []model.CommodityResponse {
+	commodity := model.Commodity{}
+	impl.db.Where("id = ?", id).Delete(&commodity)
+	return impl.GetAllCommodities(ctx)
+}
+
+func (impl *TennisMomentDaoImpl) DeleteOption(ctx context.Context, id int64) []model.OptionResponse {
+	Option := model.Option{}
+	OptionRequest := model.Option{}
+	impl.db.Where("id = ?", id).Find(&Option)
+	impl.db.Where("id = ?", id).Delete(&OptionRequest)
+	return impl.GetOptionsForCommidity(ctx, Option.ComId)
+}
+
+func (impl *TennisMomentDaoImpl) UpdateCommodity(ctx context.Context, CommodityResponse model.CommodityResponse) model.CommodityResponse {
+	Commodity := model.Commodity{Id: CommodityResponse.Id, Name: CommodityResponse.Name, Intro: CommodityResponse.Intro, Cag: CommodityResponse.Cag, State: CommodityResponse.State}
+	impl.db.Save(&Commodity)
+	for _, option := range CommodityResponse.Options {
+		impl.UpdateOption(ctx, option, CommodityResponse.Id)
+	}
+	return impl.GetCommodityInfo(ctx, Commodity.Id)
+}
+
+func (impl *TennisMomentDaoImpl) UpdateOption(ctx context.Context, OptionResponse model.OptionResponse, comId int64) []model.OptionResponse {
+	Option := model.Option{Id: OptionResponse.Id, Image: OptionResponse.Image, Intro: OptionResponse.Intro, Price: OptionResponse.Price, Inventory: OptionResponse.Inventory, ComId: comId}
+	impl.db.Save(&Option)
+	return impl.GetOptionsForCommidity(ctx, comId)
+}
+
+func (impl *TennisMomentDaoImpl) GetCommodityInfo(ctx context.Context, CommodityId int64) model.CommodityResponse {
+	Commodity := model.Commodity{}
+	impl.db.Where("id = ?", CommodityId).First(&Commodity)
+	orders := impl.GetOrderNumForCommodity(ctx, Commodity.Id)
+	options := impl.GetOptionsForCommidity(ctx, Commodity.Id)
+	return model.CommodityResponse{Id: Commodity.Id, Name: Commodity.Name, Intro: Commodity.Intro, Cag: Commodity.Cag, Orders: orders, Options: options, State: Commodity.State}
+}
+
+func (impl *TennisMomentDaoImpl) GetCommoditySimpleInfo(ctx context.Context, CommodityId int64) model.Commodity {
+	Commodity := model.Commodity{}
+	impl.db.Where("id = ?", CommodityId).First(&Commodity)
+	return Commodity
+}
+
+func (impl *TennisMomentDaoImpl) GetOrderNumForCommodity(ctx context.Context, CommodityId int64) int64 {
+	bills := make([]model.Bill, 0)
+	impl.db.Where("id = ?", CommodityId).Find(&bills)
+	var num int64
+	for _, bill := range bills {
+		num += bill.Quantity
+	}
+	return num
+}
+
+func (impl *TennisMomentDaoImpl) GetOptionsForCommidity(ctx context.Context, CommodityId int64) []model.OptionResponse {
+	options := make([]model.Option, 0)
+	impl.db.Where("com_id = ?", CommodityId).Find(&options)
+
+	optionResponses := make([]model.OptionResponse, 0)
+	for _, option := range options {
+		optionResponse := model.OptionResponse{Id: option.Id, Image: option.Image, Intro: option.Intro, Price: option.Price, Inventory: option.Inventory}
+		optionResponses = append(optionResponses, optionResponse)
+	}
+	return optionResponses
+}
+
+func (impl *TennisMomentDaoImpl) SearchCommodity(ctx context.Context, id int64) bool {
+	var Commodity model.Commodity
+	impl.db.Where("id = ?", id).First(&Commodity)
+	return Commodity.Id == id
+}
+
+func (impl *TennisMomentDaoImpl) GetMyOrders(ctx context.Context, playerId int64) utils.IntMatrix {
+	orders := make([]model.Order, 0)
+	orderResponses := utils.IntMatrix{}
+	impl.db.Where("player_id = ?", playerId).Find(&orders)
+
+	for _, order := range orders {
+		orderResponses = append(orderResponses, order.Id)
+	}
+	return orderResponses
+}
+
+func (impl *TennisMomentDaoImpl) GetMyAddresss(ctx context.Context, playerId int64) utils.IntMatrix {
+	addresss := make([]model.Address, 0)
+	addressResponses := utils.IntMatrix{}
+	impl.db.Where("player_id = ?", playerId).Find(&addresss)
+
+	for _, order := range addresss {
+		addressResponses = append(addressResponses, order.Id)
+	}
+	return addressResponses
+}
+
+func (impl *TennisMomentDaoImpl) GetMyCart(ctx context.Context, playerId int64) int64 {
+	cart := model.Cart{}
+	impl.db.Where("player_id = ?", playerId).First(&cart)
+	return cart.OrderId
 }
