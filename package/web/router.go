@@ -70,9 +70,9 @@ func RunHttp() {
 	orderInfo := r.Group("/order")
 	{
 		orderInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddOrder)
-		// orderInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteOrder)
+		orderInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteOrder)
 		// orderInfo.POST("/search", controller.NewTennisMomentControllerImpl().GetOrderInfos)
-		// orderInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateOrder)
+		orderInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateOrder)
 		orderInfo.POST("/getInfos", controller.NewTennisMomentControllerImpl().GetOrderInfosByUserId)
 		orderInfo.GET("/getAll", controller.NewTennisMomentControllerImpl().GetAllOrders)
 	}
@@ -80,7 +80,7 @@ func RunHttp() {
 	addressInfo := r.Group("/address")
 	{
 		addressInfo.POST("/add", controller.NewTennisMomentControllerImpl().AddAddress)
-		// addressInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteAddress)
+		addressInfo.POST("/delete", controller.NewTennisMomentControllerImpl().DeleteAddress)
 		addressInfo.POST("/getInfos", controller.NewTennisMomentControllerImpl().GetAddressInfos)
 		addressInfo.POST("/update", controller.NewTennisMomentControllerImpl().UpdateAddress)
 	}

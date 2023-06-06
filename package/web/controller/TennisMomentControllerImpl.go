@@ -359,6 +359,34 @@ func (impl TennisMomentControllerImpl) AddOrder(c *gin.Context) {
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
 }
 
+func (impl TennisMomentControllerImpl) UpdateOrder(c *gin.Context) {
+
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	order := model.OrderResponse{}
+	json.Unmarshal(bytes, &order)
+	if err != nil {
+		panic(err)
+	}
+
+	res := impl.dao.UpdateOrder(c, order)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) DeleteOrder(c *gin.Context) {
+	type DeleteOrderRequest struct {
+		Id int64 `json:"id"`
+	}
+
+	var req DeleteOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+
+	res := impl.dao.DeleteOrder(c, req.Id)
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
 func (impl TennisMomentControllerImpl) AddAddress(c *gin.Context) {
 
 	body := c.Request.Body
@@ -403,6 +431,21 @@ func (impl TennisMomentControllerImpl) GetAddressInfos(c *gin.Context) {
 		res = append(res, address)
 		fmt.Println(res)
 	}
+	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
+}
+
+func (impl TennisMomentControllerImpl) DeleteAddress(c *gin.Context) {
+	type DeleteAddressRequest struct {
+		Id int64 `json:"id"`
+	}
+
+	var req DeleteAddressRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// 处理错误
+	}
+
+	res := impl.dao.DeleteAddress(c, req.Id)
+
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
 }
 
@@ -463,16 +506,15 @@ func (impl TennisMomentControllerImpl) DeleteBillInCart(c *gin.Context) {
 }
 
 func (impl TennisMomentControllerImpl) AssignCartForUser(c *gin.Context) {
-	type AssignCartRequest struct {
-		Id int64 `json:"id"`
+	body := c.Request.Body
+	bytes, err := ioutil.ReadAll(body)
+	order := model.OrderResponse{}
+	json.Unmarshal(bytes, &order)
+	if err != nil {
+		panic(err)
 	}
 
-	var req AssignCartRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		// 处理错误
-	}
-
-	res := impl.dao.AssignCartForUser(c, req.Id)
+	res := impl.dao.AssignCartForUser(c, order)
 
 	c.JSON(200, map[string]interface{}{"code": 0, "msg": "", "count": 0, "data": res})
 }

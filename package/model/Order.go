@@ -7,7 +7,6 @@ import (
 type Order struct {
 	Id                int64   `json:"id"`
 	ShippingAddressId int64   `json:"shippingAddressId"`
-	DeliveryAddressId int64   `json:"deliveryAddressId"`
 	PlayerId          int64   `json:"playerId"`
 	CreatedTime       float64 `json:"createdTime"`
 	PayedTime         float64 `json:"payedTime"`
@@ -26,7 +25,6 @@ func (Order Order) MarshalJSON() ([]byte, error) {
 		"playerId":          Order.PlayerId,
 		"payment":           Order.Payment,
 		"shippingAddressId": Order.ShippingAddressId,
-		"deliveryAddressId": Order.DeliveryAddressId,
 		"createdTime":       Order.CreatedTime,
 		"payTime":           Order.PayedTime,
 		"completedTime":     Order.CompletedTime,
@@ -48,7 +46,6 @@ type OrderResponse struct {
 	PlayerId        int64           `json:"playerId"`
 	Bills           []BillResponse  `json:"bills"`
 	ShippingAddress AddressResponse `json:"shippingAddress"`
-	DeliveryAddress AddressResponse `json:"deliveryAddress"`
 	CreatedTime     float64         `json:"createdTime"`
 	PayedTime       float64         `json:"payedTime"`
 	CompletedTime   float64         `json:"completedTime"`
@@ -63,7 +60,6 @@ func (OrderResponse OrderResponse) MarshalJSON() ([]byte, error) {
 		"bills":           OrderResponse.Bills,
 		"payment":         OrderResponse.Payment,
 		"shippingAddress": OrderResponse.ShippingAddress,
-		"deliveryAddress": OrderResponse.DeliveryAddress,
 		"createdTime":     OrderResponse.CreatedTime,
 		"payedTime":       OrderResponse.PayedTime,
 		"completedTime":   OrderResponse.CompletedTime,

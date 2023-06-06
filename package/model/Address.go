@@ -14,6 +14,7 @@ type Address struct {
 	City            string `json:"city"`
 	Area            string `json:"area"`
 	DetailedAddress string `json:"detailedAddress"`
+	IsDefault       bool   `json:"isDefault"`
 }
 
 func (Address Address) TableName() string {
@@ -31,6 +32,7 @@ func (Address Address) MarshalJSON() ([]byte, error) {
 		"city":            Address.City,
 		"area":            Address.Area,
 		"detailedAddress": Address.DetailedAddress,
+		"isDefault":       Address.IsDefault,
 	})
 }
 
@@ -52,6 +54,7 @@ type AddressResponse struct {
 	City          string `json:"city"`
 	Area          string `json:"area"`
 	DetailAddress string `json:"detailedAddress"`
+	IsDefault     bool   `json:"isDefault"`
 }
 
 func (AddressResponse AddressResponse) TableName() string {
@@ -68,6 +71,7 @@ func (AddressResponse AddressResponse) MarshalJSON() ([]byte, error) {
 		"city":            AddressResponse.City,
 		"area":            AddressResponse.Area,
 		"detailedAddress": AddressResponse.DetailAddress,
+		"isDefault":       AddressResponse.IsDefault,
 	})
 }
 

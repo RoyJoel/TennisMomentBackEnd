@@ -31,6 +31,7 @@ type User struct {
 	Addresss           utils.IntMatrix    `json:"addresss"`
 	AllOrders          utils.IntMatrix    `json:"allOrders"`
 	Cart               int64              `json:"cart"`
+	DefaultAddress     AddressResponse    `json:"defaultAddress"`
 	Token              string             `json:"token"`
 }
 
@@ -60,6 +61,7 @@ func (User User) MarshalJSON() ([]byte, error) {
 		"addresss":           User.Addresss,
 		"allOrders":          User.AllOrders,
 		"cart":               User.Cart,
+		"defaultAddress":     User.DefaultAddress,
 		"token":              User.Token,
 	})
 }
